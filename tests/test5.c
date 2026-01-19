@@ -1,6 +1,5 @@
 #include "../lib/includes/start.h"
 #include "../lib/includes/syscall.h"
-#include "../lib/includes/syscodes.h"
 
 int main() {
   char *msg = "Hello, World";
