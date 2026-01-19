@@ -4,7 +4,9 @@
 #include "bits.hpp"
 #include "system.hpp"
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
+#include <iostream>
 #include <string.h>
 #include <unistd.h>
 
@@ -210,14 +212,14 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LW(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    bzero(reg + rd, WORD);
+    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD);
   }
 
   [[gnu::always_inline]]
   static void LH(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    bzero(reg + rd, WORD);
+    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
     // TODO: This will not work for 64-bit architecture
     // Sign extend the number
@@ -229,7 +231,7 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LB(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    bzero(reg + rd, WORD);
+    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
     // Need to sign extend the number
     reg[rd] = ((reg[rd] >> 7) & 0x1) == 0x0
@@ -242,14 +244,15 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LBU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                   word_t imm, size_t *PC, bool *PC_Change) {
-    bzero(reg + rd, WORD);
+    // bzero(reg + rd, WORD);	// because registers are being shared here!
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
+    // fprintf("reg: %d\n", rs1);
   }
 
   [[gnu::always_inline]]
   static void LHU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                   word_t imm, size_t *PC, bool *PC_Change) {
-    bzero(reg + rd, WORD);
+    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
   }
 

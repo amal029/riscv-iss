@@ -1,3 +1,4 @@
+#include "../lib/includes/lib.h"
 #include "../lib/includes/syscall.h"
 
 int factorial(int n) {
@@ -9,5 +10,7 @@ int factorial(int n) {
 
 int main() {
   int res = factorial(5);
-  write(1, &res, 4);
+  char str[4]; /* 4 numbers, + NUL */
+  itoa(res, str, 10);
+  write(1, str, 3);
 }

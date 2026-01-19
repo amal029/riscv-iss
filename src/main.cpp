@@ -90,11 +90,11 @@ void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec) {
   exec.setRegFile(0, 0);
   // First fetch the instruction from I-memory
   inst = Fetch::fetch(MEM, PC);
-#ifdef DEBUG  
+#ifdef INST  
   fprintf(stderr, "%zx:", PC);
   print_word(inst);
   std::cout << "\n";
-#endif  
+#endif
   // Then Decode instruction using decode class
   Type_Index val = Decode::decode(inst);
   // Then execute the instruction using the Execute class
@@ -106,7 +106,8 @@ void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec) {
 }
 
 void add_break_points(std::vector<size_t> &breaks) {
-  std::cout << "Add breakpoints like so: \"b <prog-address>\"\n";
+  std::cout
+      << "Add breakpoints (in hex) like so: \"b <prog-address-in-hex>\"\n";
   std::cout << "q exists adding break points\n";
   std::string input;
   while (std::getline(std::cin, input)) {
@@ -115,7 +116,8 @@ void add_break_points(std::vector<size_t> &breaks) {
       break;
     } else {
       std::string token = input.substr(input.find(" "), input.size());
-      breaks.emplace_back(std::stoull(token));
+      // Convert from hex to
+      breaks.emplace_back(std::stoull(token, nullptr, 16));
     }
   }
 }

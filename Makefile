@@ -3,6 +3,7 @@ CXX=g++-m
 
 RISCVCC=riscv64-unknown-elf-gcc
 RISCVOBJ=riscv64-unknown-elf-objcopy
+RISCVFLAGS=-O0
 
 ASM=./lib/asm
 
@@ -22,9 +23,9 @@ binary:	compile_start compile_binary
 # 	-Wl,--section-start=.data=0x3ff $(FNAME).c -o $(FNAME).elf
 
 compile_start:
-	$(RISCVCC) -march=rv32im -mabi=ilp32 \
+	$(RISCVCC) $(RICVFLAGS) -march=rv32im -mabi=ilp32 \
 	-ffreestanding -nostdlib -c $(ASM)/start.S -o $(ASM)/start.o
 
 compile_binary:
-	$(RISCVCC) -T linker.ld -march=rv32im -mabi=ilp32 \
+	$(RISCVCC) $(RISCVFLAGS) -T linker.ld -march=rv32im -mabi=ilp32 \
 	-ffreestanding -nostdlib $(ASM)/start.o $(FNAME).c -o $(FNAME).elf
