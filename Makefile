@@ -1,0 +1,20 @@
+CXXFLAGS?=-O3 -std=c++17
+CXX?=g++-m
+
+RISCVCC=riscv64-unknown-elf-gcc
+RISCVOBJ=riscv64-unknown-elf-objcopy
+
+main:
+	$(CXX) $(CXXFLAGS) ./src/main.cpp -o iss
+
+clean:
+	rm -rf iss ./tests/*.elf ./tests/*.bin
+
+binary:	compile_binary
+	$(RISCVOBJ) -O binary $(FNAME).elf $(FNAME).bin
+
+compile_binary:
+	$(RISCVCC) -nostartfiles -Wl,--section-start=.text=0x0 \
+	-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
+	-Wl,--section-start=.data=0x3ff $(FNAME).c -o $(FNAME).elf
+
