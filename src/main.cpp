@@ -1,9 +1,9 @@
 // Define the register file
-#include "bits.hpp"
-#include "decode.hpp"
-#include "execute.hpp"
-#include "fetch.hpp"
-#include "system.hpp"
+#include "./includes/bits.hpp"
+#include "./includes/decode.hpp"
+#include "./includes/execute.hpp"
+#include "./includes/fetch.hpp"
+#include "./includes/system.hpp"
 #include <_string.h>
 #include <_strings.h>
 #include <algorithm>
