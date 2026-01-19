@@ -1,6 +1,3 @@
-int f(int);
-/* The first function should always be _start */
-int _start() { return f(5); }
 
 int f(int n) {
   if (n > 1)
@@ -8,3 +5,5 @@ int f(int n) {
   else
     return 1;
 }
+
+int main() { return f(5); }

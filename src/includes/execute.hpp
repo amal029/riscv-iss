@@ -5,6 +5,7 @@
 #include "system.hpp"
 #include <cstdint>
 #include <cstring>
+#include <string.h>
 #include <unistd.h>
 
 // The R-type functions
@@ -546,7 +547,10 @@ struct Execute {
   using BOperations = void (*)(word_t *reg, uint8_t rs1, uint8_t rs2,
                                size_t *PC, word_t imm, bool *PC_Change);
   void setPC_Change() { *PC_Change = false; }
-  bool getPC_Change() const { return *PC_Change; }  
+  bool getPC_Change() const { return *PC_Change; }
+  void setRegFile(uint8_t index, int value) {
+    std::memset(REGFILE + index, value, WORD);
+  }
 
 private:
   word_t *REGFILE;

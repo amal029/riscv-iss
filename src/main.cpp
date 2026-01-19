@@ -87,11 +87,14 @@ std::vector<uint8_t> readFile(const std::string &filename) {
 
 void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec) {
   exec.setPC_Change();
+  exec.setRegFile(0, 0);
   // First fetch the instruction from I-memory
   inst = Fetch::fetch(MEM, PC);
+#ifdef DEBUG  
   fprintf(stderr, "%zx:", PC);
   print_word(inst);
   std::cout << "\n";
+#endif  
   // Then Decode instruction using decode class
   Type_Index val = Decode::decode(inst);
   // Then execute the instruction using the Execute class
@@ -150,7 +153,7 @@ int main(int argc, char **argv) {
   add_break_points(breaks);
 
   // The last byte in memory to allow it to grow upwards.
-  REGFILE[2] = (ISIZE + DSIZE) * Config::KB; // SP
+  // REGFILE[2] = (ISIZE + DSIZE) * Config::KB; // SP
   std::cout << "Press: p for registers, m for memory (shared program then "
             << "data), s to exectute 1 instruction, r for run to program end. "
                "Finally q to quit\n";

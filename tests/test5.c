@@ -1,4 +1,3 @@
-#include "../lib/includes/start.h"
 #include "../lib/includes/syscall.h"
 
 int main() {
