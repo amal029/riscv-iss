@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../lib/includes/syscall.h"
+#include "../../lib/includes/syscodes.h"
 #include "bits.hpp"
 #include "system.hpp"
 #include <cstdint>

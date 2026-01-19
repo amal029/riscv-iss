@@ -1,7 +1,4 @@
-#define SYS_WRITE 64
-#define SYS_READ 63		/* TODO */
-#define SYS_EXIT 94
-
+#include "syscodes.h"
 
 // Function to print a buffer using RISC-V ecall
 void write(int fd, void *buf, unsigned int len) {
