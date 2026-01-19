@@ -1,6 +1,7 @@
 #pragma once
 #include "bits.hpp"
 #include "opcodes.hpp"
+#include <assert.h>
 #include <bitset>
 #include <cstdint>
 #include <iostream>
@@ -218,9 +219,10 @@ struct Decode {
     word_t imm = (inst >> INST_BIT_SHIFT::I_IMM_SHIFT) & Masks::I_IMM_MASK;
     if (func3 == IE_FUNC3::OP_F3_ECALL && imm == 0x0)
       return IFuncIndex::ECALL;
-    else if (func3 == IE_FUNC3::OP_F3_EBREAK && imm == 0x1)
-      return IFuncIndex::EBREAK;
-    else {
+    else if (func3 == IE_FUNC3::OP_F3_EBREAK && imm == 0x1) {
+      std::cout << "No support for EBREAK yet!\n";
+      assert(false);
+    } else {
       std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
                 << "\n";
       exit(1);

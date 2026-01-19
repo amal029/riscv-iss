@@ -13,8 +13,12 @@ clean:
 binary:	compile_binary
 	$(RISCVOBJ) -O binary $(FNAME).elf $(FNAME).bin
 
-compile_binary:
-	$(RISCVCC) -nostartfiles -Wl,--section-start=.text=0x0 \
-	-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
-	-Wl,--section-start=.data=0x3ff $(FNAME).c -o $(FNAME).elf
+# compile_binary:
+# 	$(RISCVCC) -nostartfiles \
+# 	-Wl,--section-start=.text=0x0 \
+# 	-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
+# 	-Wl,--section-start=.data=0x3ff $(FNAME).c -o $(FNAME).elf
 
+compile_binary:
+	$(RISCVCC) -T linker.ld -march=rv32im -mabi=ilp32 \
+	-ffreestanding -nostdlib $(FNAME).c -o $(FNAME).elf

@@ -89,7 +89,6 @@ enum class IFuncIndex { // R-type function indices
   LBU = 12,
   LHU = 13,
   JALR = 14,
-  // TODO:
   ECALL = 15,
   // TODO:
   EBREAK = 16

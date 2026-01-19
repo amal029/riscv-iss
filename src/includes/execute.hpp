@@ -1,9 +1,11 @@
 #pragma once
 
+#include "../../lib/includes/syscall.h"
+#include "bits.hpp"
+#include "system.hpp"
 #include <cstdint>
 #include <cstring>
-#include "system.hpp"
-#include "bits.hpp"
+#include <unistd.h>
 
 // The R-type functions
 struct RFuncs {
@@ -78,7 +80,7 @@ struct RFuncs {
 
   [[gnu::always_inline]]
   static inline constexpr void MULH(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+                                    uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
     reg[rd] = ((int64_t)reg[rs1] * (int64_t)reg[rs2]) >> 32;
@@ -86,7 +88,7 @@ struct RFuncs {
 
   [[gnu::always_inline]]
   static inline constexpr void MULSU(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+                                     uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
     reg[rd] = ((int64_t)reg[rs1] * (uint64_t)reg[rs2]) >> 32;
@@ -142,7 +144,8 @@ struct IFuncs {
 
   [[gnu::always_inline]]
   constexpr static void JALR(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC, bool *PC_Change) {
+                             uint8_t *DMEM, word_t imm, size_t *PC,
+                             bool *PC_Change) {
     reg[rd] = *PC + 4;
     *PC = (reg[rs1] + imm);
     // Setting the LSB to 0 as stated in the official documentation
@@ -170,31 +173,36 @@ struct IFuncs {
 
   [[gnu::always_inline]]
   constexpr static void SLLI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC, bool *PC_Change) {
+                             uint8_t *DMEM, word_t imm, size_t *PC,
+                             bool *PC_Change) {
     reg[rd] = reg[rs1] << (imm & 0b11111);
   }
 
   [[gnu::always_inline]]
   constexpr static void SLRI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC, bool *PC_Change) {
+                             uint8_t *DMEM, word_t imm, size_t *PC,
+                             bool *PC_Change) {
     reg[rd] = (word_t)((uword_t)reg[rs1]) >> (imm & 0b11111);
   }
 
   [[gnu::always_inline]]
   constexpr static void SARI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC, bool *PC_Change) {
+                             uint8_t *DMEM, word_t imm, size_t *PC,
+                             bool *PC_Change) {
     reg[rd] = reg[rs1] >> (imm & 0b11111);
   }
 
   [[gnu::always_inline]]
   constexpr static void SLTI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC, bool *PC_Change) {
+                             uint8_t *DMEM, word_t imm, size_t *PC,
+                             bool *PC_Change) {
     reg[rd] = rs1 < imm ? 1 : 0;
   }
 
   [[gnu::always_inline]]
   constexpr static void SLTIU(word_t *reg, uint8_t rd, uint8_t rs1,
-                              uint8_t *DMEM, word_t imm, size_t *PC, bool *PC_Change) {
+                              uint8_t *DMEM, word_t imm, size_t *PC,
+                              bool *PC_Change) {
     reg[rd] = reg[rs1] < (uword_t)imm ? 1 : 0;
   }
 
@@ -242,6 +250,37 @@ struct IFuncs {
                   word_t imm, size_t *PC, bool *PC_Change) {
     bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
+  }
+
+  [[gnu::always_inline]]
+  static void ECALL(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                    word_t imm, size_t *PC, bool *PC_Change) {
+    // XXX: Check the syscall number in register a7 (x17)
+    int fd;
+    word_t address;
+    size_t len;
+    switch (reg[17]) {
+    case SYS_WRITE:
+      // XXX: Here the fd is in a0, a1 has the address, and a2 is the
+      // length of the buffer to write.
+      fd = reg[10];
+      address = reg[11];
+      len = reg[12];
+#ifdef DEBUG
+      printf("%d,%x,%d", fd, address, len);
+#endif
+      write(fd, DMEM + address, len);
+      break;
+    case SYS_EXIT:
+      break;
+    case SYS_READ:
+      fd = reg[10];
+      address = reg[11];
+      len = reg[12];
+      read(fd, DMEM + address, len);
+      break;
+      break;
+    }
   }
 };
 
@@ -520,10 +559,10 @@ private:
       RFuncs::SLL,  RFuncs::SRL,  RFuncs::SRA,   RFuncs::SLT,  RFuncs::SLTU,
       RFuncs::MUL,  RFuncs::MULH, RFuncs::MULSU, RFuncs::MULU, RFuncs::DIV,
       RFuncs::DIVU, RFuncs::REM,  RFuncs::REMU};
-  constexpr static IOperations iops[15]{
+  constexpr static IOperations iops[16]{
       IFuncs::ADD,  IFuncs::OR,   IFuncs::XOR,  IFuncs::AND,   IFuncs::SLLI,
       IFuncs::SLRI, IFuncs::SARI, IFuncs::SLTI, IFuncs::SLTIU, IFuncs::LB,
-      IFuncs::LH,   IFuncs::LW,   IFuncs::LBU,  IFuncs::LHU,   IFuncs::JALR};
+      IFuncs::LH,   IFuncs::LW,   IFuncs::LBU,  IFuncs::LHU,   IFuncs::JALR, IFuncs::ECALL};
   constexpr static SOperations sops[3]{SFuncs::SB, SFuncs::SH, SFuncs::SW};
   constexpr static UOperations uops[2]{UFuncs::LUI, UFuncs::AUIPC};
   constexpr static JOperations jops[2]{JFuncs::JAL};
