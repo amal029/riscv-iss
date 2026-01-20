@@ -1,11 +1,8 @@
-// Define the register file
 #include "./includes/bits.hpp"
 #include "./includes/decode.hpp"
 #include "./includes/execute.hpp"
 #include "./includes/fetch.hpp"
 #include "./includes/system.hpp"
-#include <_string.h>
-#include <_strings.h>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -146,7 +143,7 @@ int main(int argc, char **argv) {
   std::memcpy(MEM, file.data(), file.size());
 
   uint32_t inst = 0;
-  Type_Index val;
+  // Type_Index val;
   Execute exec{REGFILE, MEM, &PC, &PC_change};
   unsigned char input;
 

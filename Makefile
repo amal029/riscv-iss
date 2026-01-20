@@ -1,9 +1,9 @@
-CXXFLAGS?=-O3 -std=c++17
+CXXFLAGS?=-O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow
 CXX=g++-m
 
 RISCVCC=riscv64-unknown-elf-gcc
 RISCVOBJ=riscv64-unknown-elf-objcopy
-RISCVFLAGS=-O0
+RISCVFLAGS=-O0 -Wall -Wextra -Werror
 
 ASM=./lib/asm
 
@@ -23,7 +23,7 @@ binary:	compile_start compile_binary
 # 	-Wl,--section-start=.data=0x3ff $(FNAME).c -o $(FNAME).elf
 
 compile_start:
-	$(RISCVCC) $(RICVFLAGS) -march=rv32im -mabi=ilp32 \
+	$(RISCVCC) $(RISCVFLAGS) -march=rv32im -mabi=ilp32 \
 	-ffreestanding -nostdlib -c $(ASM)/start.S -o $(ASM)/start.o
 
 compile_binary:

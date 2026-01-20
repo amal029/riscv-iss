@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
-#include <iostream>
+// #include <iostream>
 #include <string.h>
 #include <unistd.h>
 
@@ -206,7 +206,7 @@ struct IFuncs {
   constexpr static void SLTIU(word_t *reg, uint8_t rd, uint8_t rs1,
                               uint8_t *DMEM, word_t imm, size_t *PC,
                               bool *PC_Change) {
-    reg[rd] = reg[rs1] < (uword_t)imm ? 1 : 0;
+    reg[rd] = (uword_t)reg[rs1] < (uword_t)imm ? 1 : 0;
   }
 
   [[gnu::always_inline]]
@@ -434,8 +434,8 @@ struct Execute {
     return x;
   }
 
-  Execute(word_t *rf, uint8_t *DMEM, size_t *PC, bool *PC_Change)
-      : REGFILE(rf), DMEM(DMEM), PC(PC), PC_Change(PC_Change) {}
+  Execute(word_t *rf, uint8_t *DMEMa, size_t *PCa, bool *PC_Changea)
+      : REGFILE(rf), DMEM(DMEMa), PC(PCa), PC_Change(PC_Changea) {}
   // This class executes the given instruction using function pointer
   // dispatch.
   void execute(Type_Index tyi, uint32_t inst) {
