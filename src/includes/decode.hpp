@@ -96,7 +96,7 @@ struct Decode {
       return RFuncIndex::MULSU;
     } else if (func3 == R_FUNC3::OP_F3_MULU &&
                func7 == R_FUNC7::OP_F7_MUL_DIV) {
-      return RFuncIndex::MULU;
+      return RFuncIndex::MULHU;
     } else if (func3 == R_FUNC3::OP_F3_DIV && func7 == R_FUNC7::OP_F7_MUL_DIV) {
       return RFuncIndex::DIV;
     } else if (func3 == R_FUNC3::OP_F3_DIVU &&
@@ -195,13 +195,10 @@ struct Decode {
     else if (func3 == RI_FUNC3::OP_F3_AND)
       return IFuncIndex::AND;
     else if (func3 == RI_FUNC3::OP_F3_SLL && (imm >> 5) == 0x00)
-      // FIXME: This need to check the immediate value part too.
       return IFuncIndex::SLLI;
     else if (func3 == RI_FUNC3::OP_F3_SRL && (imm >> 5) == 0x00)
-      // FIXME: This need to check the immediate value part too.
       return IFuncIndex::SRLI;
     else if (func3 == RI_FUNC3::OP_F3_SRA && (imm >> 5) == 0x20)
-      // FIXME: This need to check the immediate value part too.
       return IFuncIndex::SRAI;
     else if (func3 == RI_FUNC3::OP_F3_SLT)
       return IFuncIndex::SLTI;

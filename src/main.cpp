@@ -32,6 +32,10 @@ void print_registers(word_t *regs, size_t PC) {
   for (size_t i = 0; i < REGS; ++i) {
     if (i == 2) {
       std::cout << "sp: ";
+    } else if (i >= 5 && i <= 7) {
+      std::cout << "t" << (i - 5) << ": ";
+    } else if (i >= 28 && i <= 31) {
+      std::cout << "t" << (i - 25) << ": ";
     } else if (i == 1)
       std::cout << "ra: ";
     else if (i == 3)

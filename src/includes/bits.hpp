@@ -64,7 +64,7 @@ enum class RFuncIndex { // R-type function indices
   MUL = 10,
   MULH = 11,
   MULSU = 12,
-  MULU = 13,
+  MULHU = 13,
   DIV = 14,
   DIVU = 15,
   REM = 16,

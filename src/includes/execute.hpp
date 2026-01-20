@@ -98,11 +98,11 @@ struct RFuncs {
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void MULU(word_t *reg, uint8_t rd, uint8_t rs1,
+  static inline constexpr void MULHU(word_t *reg, uint8_t rd, uint8_t rs1,
                                     uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
-    reg[rd] = ((uint64_t)reg[rs1] * (uint64_t)reg[rs2]) >> 32;
+    reg[rd] = (uword_t)(((uint64_t)reg[rs1] * (uint64_t)reg[rs2]) >> 32);
   }
 
   [[gnu::always_inline]]
@@ -182,10 +182,10 @@ struct IFuncs {
   }
 
   [[gnu::always_inline]]
-  constexpr static void SLRI(word_t *reg, uint8_t rd, uint8_t rs1,
+  constexpr static void SRLI(word_t *reg, uint8_t rd, uint8_t rs1,
                              uint8_t *DMEM, word_t imm, size_t *PC,
                              bool *PC_Change) {
-    reg[rd] = (word_t)((uword_t)reg[rs1]) >> (imm & 0b11111);
+    reg[rd] = (word_t)(((uword_t)reg[rs1]) >> (imm & 0b11111));
   }
 
   [[gnu::always_inline]]
@@ -564,11 +564,11 @@ private:
   constexpr static ROperations rops[18]{
       RFuncs::ADD,  RFuncs::SUB,  RFuncs::XOR,   RFuncs::OR,   RFuncs::AND,
       RFuncs::SLL,  RFuncs::SRL,  RFuncs::SRA,   RFuncs::SLT,  RFuncs::SLTU,
-      RFuncs::MUL,  RFuncs::MULH, RFuncs::MULSU, RFuncs::MULU, RFuncs::DIV,
+      RFuncs::MUL,  RFuncs::MULH, RFuncs::MULSU, RFuncs::MULHU, RFuncs::DIV,
       RFuncs::DIVU, RFuncs::REM,  RFuncs::REMU};
   constexpr static IOperations iops[16]{
       IFuncs::ADD,  IFuncs::OR,   IFuncs::XOR,  IFuncs::AND,   IFuncs::SLLI,
-      IFuncs::SLRI, IFuncs::SARI, IFuncs::SLTI, IFuncs::SLTIU, IFuncs::LB,
+      IFuncs::SRLI, IFuncs::SARI, IFuncs::SLTI, IFuncs::SLTIU, IFuncs::LB,
       IFuncs::LH,   IFuncs::LW,   IFuncs::LBU,  IFuncs::LHU,   IFuncs::JALR, IFuncs::ECALL};
   constexpr static SOperations sops[3]{SFuncs::SB, SFuncs::SH, SFuncs::SW};
   constexpr static UOperations uops[2]{UFuncs::LUI, UFuncs::AUIPC};

@@ -3,7 +3,7 @@ CXX=g++-m
 
 RISCVCC=riscv64-unknown-elf-gcc
 RISCVOBJ=riscv64-unknown-elf-objcopy
-RISCVFLAGS=-O0 -Wall -Wextra -Werror
+RISCVFLAGS=-O1 -Wall -Wextra -Werror
 
 ASM=./lib/asm
 

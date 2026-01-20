@@ -9,8 +9,9 @@ int factorial(int n) {
 }
 
 int main() {
-  int res = factorial(5);
+  volatile int res = factorial(5);
   char str[4]; /* 4 numbers, + NUL */
   itoa(res, str, 10);
   write(1, str, 3);
+  return 0;
 }
