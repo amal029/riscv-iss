@@ -140,7 +140,7 @@ struct RFuncs {
 
 struct IFuncs {
   [[gnu::always_inline]]
-  constexpr static void ADD(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+  constexpr static void ADDI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                             word_t imm, size_t *PC, bool *PC_Change) {
     reg[rd] = reg[rs1] + imm;
   }
@@ -157,19 +157,19 @@ struct IFuncs {
   }
 
   [[gnu::always_inline]]
-  constexpr static void OR(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+  constexpr static void ORI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                            word_t imm, size_t *PC, bool *PC_Change) {
     reg[rd] = reg[rs1] | imm;
   }
 
   [[gnu::always_inline]]
-  constexpr static void XOR(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+  constexpr static void XORI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                             word_t imm, size_t *PC, bool *PC_Change) {
     reg[rd] = reg[rs1] | imm;
   }
 
   [[gnu::always_inline]]
-  constexpr static void AND(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+  constexpr static void ANDI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                             word_t imm, size_t *PC, bool *PC_Change) {
     reg[rd] = reg[rs1] & imm;
   }
@@ -189,7 +189,7 @@ struct IFuncs {
   }
 
   [[gnu::always_inline]]
-  constexpr static void SARI(word_t *reg, uint8_t rd, uint8_t rs1,
+  constexpr static void SRAI(word_t *reg, uint8_t rd, uint8_t rs1,
                              uint8_t *DMEM, word_t imm, size_t *PC,
                              bool *PC_Change) {
     reg[rd] = reg[rs1] >> (imm & 0b11111);
@@ -246,6 +246,8 @@ struct IFuncs {
                   word_t imm, size_t *PC, bool *PC_Change) {
     // bzero(reg + rd, WORD);	// because registers are being shared here!
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
+    // After this set all higher bytes to zero
+    reg[rd] &= (WORD == 4) ? 0x000000FF : 0x00000000000000FF;
     // fprintf("reg: %d\n", rs1);
   }
 
@@ -254,6 +256,7 @@ struct IFuncs {
                   word_t imm, size_t *PC, bool *PC_Change) {
     // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
+    reg[rd] &= (WORD == 4) ? 0x0000FFFF : 0x00000000FFFFFFFF;
   }
 
   [[gnu::always_inline]]
@@ -446,7 +449,7 @@ struct Execute {
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
-      rops[static_cast<size_t>(tyi.rindex)](REGFILE, rd, rs1, rs2);
+      rops[tyi.rindex](REGFILE, rd, rs1, rs2);
       break;
     }
     case ITYPES::I: {
@@ -455,8 +458,7 @@ struct Execute {
       imm = sign_extend_imm(inst, imm);
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
-      iops[static_cast<size_t>(tyi.iindex)](REGFILE, rd, rs1, DMEM, imm, PC,
-                                            PC_Change);
+      iops[tyi.iindex](REGFILE, rd, rs1, DMEM, imm, PC, PC_Change);
       break;
     }
     case ITYPES::B: {
@@ -480,8 +482,7 @@ struct Execute {
       std::cerr << std::bitset<32>{(unsigned long long)inst} << "\n";
       std::cerr << std::bitset<32>{(unsigned long long)imm} << "\n";
 #endif
-      bops[static_cast<size_t>(tyi.bindex)](REGFILE, rs1, rs2, PC, imm,
-                                            PC_Change);
+      bops[tyi.bindex](REGFILE, rs1, rs2, PC, imm, PC_Change);
       break;
     }
     case ITYPES::J: {
@@ -499,7 +500,7 @@ struct Execute {
       word_t imm = imm1 | imm2 | imm3 | imm4;
       // sign extend the immediate number
       imm = sign_extend_j(inst, imm);
-      jops[static_cast<size_t>(tyi.jindex)](REGFILE, rd, PC, imm, PC_Change);
+      jops[tyi.jindex](REGFILE, rd, PC, imm, PC_Change);
       break;
     }
     case ITYPES::U: {
@@ -508,7 +509,7 @@ struct Execute {
 #ifdef DEBUG
       std::cout << "U-type immediate: " << (word_t)imm << "\n";
 #endif
-      uops[static_cast<size_t>(tyi.uindex)](REGFILE, rd, *PC, imm);
+      uops[tyi.uindex](REGFILE, rd, *PC, imm);
       break;
     }
     case ITYPES::S: {
@@ -528,7 +529,7 @@ struct Execute {
 #ifdef DEBUG
       std::cout << "S-type immediate value: " << (int32_t)imm << "\n";
 #endif
-      sops[static_cast<size_t>(tyi.sindex)](REGFILE, rs1, rs2, DMEM, imm);
+      sops[tyi.sindex](REGFILE, rs1, rs2, DMEM, imm);
       break;
     }
     }
@@ -560,19 +561,53 @@ private:
   uint8_t *DMEM;
   size_t *PC;
   bool *PC_Change;
-  // TODO: Generate these tables using X-macros
-  constexpr static ROperations rops[18]{
-      RFuncs::ADD,  RFuncs::SUB,  RFuncs::XOR,   RFuncs::OR,   RFuncs::AND,
-      RFuncs::SLL,  RFuncs::SRL,  RFuncs::SRA,   RFuncs::SLT,  RFuncs::SLTU,
-      RFuncs::MUL,  RFuncs::MULH, RFuncs::MULSU, RFuncs::MULHU, RFuncs::DIV,
-      RFuncs::DIVU, RFuncs::REM,  RFuncs::REMU};
-  constexpr static IOperations iops[16]{
-      IFuncs::ADD,  IFuncs::OR,   IFuncs::XOR,  IFuncs::AND,   IFuncs::SLLI,
-      IFuncs::SRLI, IFuncs::SARI, IFuncs::SLTI, IFuncs::SLTIU, IFuncs::LB,
-      IFuncs::LH,   IFuncs::LW,   IFuncs::LBU,  IFuncs::LHU,   IFuncs::JALR, IFuncs::ECALL};
-  constexpr static SOperations sops[3]{SFuncs::SB, SFuncs::SH, SFuncs::SW};
-  constexpr static UOperations uops[2]{UFuncs::LUI, UFuncs::AUIPC};
-  constexpr static JOperations jops[2]{JFuncs::JAL};
-  constexpr static BOperations bops[6]{BFuncs::BEQ, BFuncs::BNE,  BFuncs::BLT,
-                                       BFuncs::BGE, BFuncs::BLTU, BFuncs::BGEU};
+
+  // XXX: This will only allow compiling with clang++ and g++ MSVC does
+  // not support this array designated initialization.
+  constexpr static ROperations rops[]{
+      [RFuncIndex::ADD] = RFuncs::ADD,     [RFuncIndex::SUB] = RFuncs::SUB,
+      [RFuncIndex::XOR] = RFuncs::XOR,     [RFuncIndex::OR] = RFuncs::OR,
+      [RFuncIndex::AND] = RFuncs::AND,     [RFuncIndex::SLL] = RFuncs::SLL,
+      [RFuncIndex::SRL] = RFuncs::SRL,     [RFuncIndex::SRA] = RFuncs::SRA,
+      [RFuncIndex::SLT] = RFuncs::SLT,     [RFuncIndex::SLTU] = RFuncs::SLTU,
+      [RFuncIndex::MUL] = RFuncs::MUL,     [RFuncIndex::MULH] = RFuncs::MULH,
+      [RFuncIndex::MULSU] = RFuncs::MULSU, [RFuncIndex::MULHU] = RFuncs::MULHU,
+      [RFuncIndex::DIV] = RFuncs::DIV,     [RFuncIndex::DIVU] = RFuncs::DIVU,
+      [RFuncIndex::REM] = RFuncs::REM,     [RFuncIndex::REMU] = RFuncs::REMU};
+  static_assert(RFuncIndex::NUM_STATES_R == sizeof(rops) / sizeof(rops[0]),
+                "Not all I-type operations defined\n");
+
+  constexpr static IOperations iops[]{
+      [IFuncIndex::ADDI] = IFuncs::ADDI,   [IFuncIndex::ORI] = IFuncs::ORI,
+      [IFuncIndex::XORI] = IFuncs::XORI,   [IFuncIndex::ANDI] = IFuncs::ANDI,
+      [IFuncIndex::SLLI] = IFuncs::SLLI,   [IFuncIndex::SRLI] = IFuncs::SRLI,
+      [IFuncIndex::SRAI] = IFuncs::SRAI,   [IFuncIndex::SLTI] = IFuncs::SLTI,
+      [IFuncIndex::SLTIU] = IFuncs::SLTIU, [IFuncIndex::LB] = IFuncs::LB,
+      [IFuncIndex::LH] = IFuncs::LH,       [IFuncIndex::LW] = IFuncs::LW,
+      [IFuncIndex::LBU] = IFuncs::LBU,     [IFuncIndex::LHU] = IFuncs::LHU,
+      [IFuncIndex::JALR] = IFuncs::JALR,   [IFuncIndex::ECALL] = IFuncs::ECALL};
+  static_assert(IFuncIndex::NUM_STATES_I == sizeof(iops) / sizeof(iops[0]),
+                "Not all I-type operations defined\n");
+
+  constexpr static SOperations sops[]{[SFuncIndex::SB] = SFuncs::SB,
+                                      [SFuncIndex::SH] = SFuncs::SH,
+                                      [SFuncIndex::SW] = SFuncs::SW};
+  static_assert(SFuncIndex::NUM_STATES_S == sizeof(sops) / sizeof(sops[0]),
+                "Not all S-type operations defined\n");
+
+  constexpr static UOperations uops[]{[UFuncIndex::LUI] = UFuncs::LUI,
+                                      [UFuncIndex::AUIPC] = UFuncs::AUIPC};
+  static_assert(UFuncIndex::NUM_STATES_U == sizeof(uops) / sizeof(uops[0]),
+                "Not all U-type operations defined\n");
+
+  constexpr static JOperations jops[]{[JFuncIndex::JAL] = JFuncs::JAL};
+  static_assert(JFuncIndex::NUM_STATES_J == sizeof(jops) / sizeof(jops[0]),
+                "Not all J-type operations defined\n");
+
+  constexpr static BOperations bops[]{
+      [BFuncIndex::BEQ] = BFuncs::BEQ,   [BFuncIndex::BNE] = BFuncs::BNE,
+      [BFuncIndex::BLT] = BFuncs::BLT,   [BFuncIndex::BGE] = BFuncs::BGE,
+      [BFuncIndex::BLTU] = BFuncs::BLTU, [BFuncIndex::BGEU] = BFuncs::BGEU};
+  static_assert(BFuncIndex::NUM_STATES_B == sizeof(bops) / sizeof(bops[0]),
+                "Not all B-type operations defined\n");
 };

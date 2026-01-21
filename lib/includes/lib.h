@@ -1,36 +1,18 @@
-static void itoa(int value, char *str, int base) {
-  static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  int i = 0;
-  int neg = 0;
+#pragma once
 
-  // Handle negative numbers
-  if (value < 0) {
-    neg = 1;
-    value = -value;
-  }
+/* This library only supports 32-bit RISCV architecture */
 
-  // Convert digits
-  do {
-    str[i++] = digits[value % base];
-    value /= base;
-  } while (value > 0);
+/* We have a single lib with all the library function defined */
 
-  // Add minus sign if negative
-  if (neg) {
-    str[i++] = '-';
-  }
+/* Function to convert int to string, with \0 termination */
+void itoa(int, char *, unsigned int);
 
-  // Null-terminate
-  str[i] = '\0';
+/* Function to get the length of the string without \0 terminator */
+unsigned int strlen(const char *);
 
-  // Reverse the string
-  int left = 0;
-  int right = i - 1;
-  while (left < right) {
-    char temp = str[left];
-    str[left] = str[right];
-    str[right] = temp;
-    left++;
-    right--;
-  }
-}
+/* Function to concat two strings; does not change the input string.
+   Terminates the string with NUL*/
+char *strcat(char *dest, const char *s2);
+
+/* Copy from source to destination */
+void *memcpy(void *dest, const void *src, unsigned int bytes);

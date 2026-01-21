@@ -1,31 +1,42 @@
-CXXFLAGS?=-O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow
-CXX=g++-m
+CXXFLAGS := -O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow
+CXX ?= g++-m			# if not already given
 
-RISCVCC=riscv64-unknown-elf-gcc
-RISCVOBJ=riscv64-unknown-elf-objcopy
-RISCVFLAGS=-O1 -Wall -Wextra -Werror
+RISCVCC  := riscv64-unknown-elf-gcc
+RISCVOBJ := riscv64-unknown-elf-objcopy
 
-ASM=./lib/asm
+RISCV_ARCH_FLAGS := -march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
+		-ffunction-sections -Wl,--gc-sections
+RISCV_COMMON_FLAGS := $(RISCV_ARCH_FLAGS) -Wall -Wextra -Werror
+
+# The flags for com
+RISCVFLAGS := -O3 $(RISCV_COMMON_FLAGS)
+
+# The flags for compiling our libc
+RISCVLIBFLAGS := -O3 $(RISCV_COMMON_FLAGS)
+
+ASM  := ./lib/asm
+LIBC := ./lib/src
+
+CFILES := $(shell find $(LIBC) -name "*.c" -type f)
+OBJS   := $(CFILES:.c=.o)
 
 main:
 	$(CXX) $(CXXFLAGS) ./src/main.cpp -o iss
 
 clean:
-	rm -rf iss ./tests/*.elf ./tests/*.bin $(ASM)/*.o
+	rm -rf iss ./tests/*.elf ./tests/*.bin $(ASM)/*.o $(LIBC)/*.o
 
-binary:	compile_start compile_binary
+binary:	libc compile_start compile_binary
 	$(RISCVOBJ) -O binary $(FNAME).elf $(FNAME).bin
 
-# compile_binary:
-# 	$(RISCVCC) -nostartfiles \
-# 	-Wl,--section-start=.text=0x0 \
-# 	-march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
-# 	-Wl,--section-start=.data=0x3ff $(FNAME).c -o $(FNAME).elf
+libc:	$(OBJS)
+
+%.o:	%.c
+	$(RISCVCC) $(RISCVLIBFLAGS)  -c $< -o $@
 
 compile_start:
-	$(RISCVCC) $(RISCVFLAGS) -march=rv32im -mabi=ilp32 \
-	-ffreestanding -nostdlib -c $(ASM)/start.S -o $(ASM)/start.o
+	$(RISCVCC) $(RISCVFLAGS) -c $(ASM)/start.S -o $(ASM)/start.o
 
 compile_binary:
-	$(RISCVCC) $(RISCVFLAGS) -T linker.ld -march=rv32im -mabi=ilp32 \
-	-ffreestanding -nostdlib $(ASM)/start.o $(FNAME).c -o $(FNAME).elf
+	$(RISCVCC) $(RISCVFLAGS) -T linker.ld $(ASM)/start.o \
+	$(FNAME).c -o $(FNAME).elf -L$(LIBC) $(OBJS)

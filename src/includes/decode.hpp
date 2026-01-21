@@ -187,13 +187,13 @@ struct Decode {
     word_t imm = (inst >> INST_BIT_SHIFT::I_IMM_SHIFT) & Masks::I_IMM_MASK;
 
     if (func3 == RI_FUNC3::OP_F3_ADD)
-      return IFuncIndex::ADD;
+      return IFuncIndex::ADDI;
     else if (func3 == RI_FUNC3::OP_F3_XOR)
-      return IFuncIndex::XOR;
+      return IFuncIndex::XORI;
     else if (func3 == RI_FUNC3::OP_F3_OR)
-      return IFuncIndex::OR;
+      return IFuncIndex::ORI;
     else if (func3 == RI_FUNC3::OP_F3_AND)
-      return IFuncIndex::AND;
+      return IFuncIndex::ANDI;
     else if (func3 == RI_FUNC3::OP_F3_SLL && (imm >> 5) == 0x00)
       return IFuncIndex::SLLI;
     else if (func3 == RI_FUNC3::OP_F3_SRL && (imm >> 5) == 0x00)

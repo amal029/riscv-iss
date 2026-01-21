@@ -112,7 +112,6 @@ void add_break_points(std::vector<size_t> &breaks) {
   std::cout << "q exists adding break points\n";
   std::string input;
   while (std::getline(std::cin, input)) {
-    std::cout << input << "\n";
     if (input == "q") {
       break;
     } else {

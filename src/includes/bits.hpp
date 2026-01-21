@@ -48,7 +48,7 @@ struct INST_BIT_SHIFT {
 
 // TODO: Generate the indices using X-macros
 // The index for the dispatch tables.
-enum class RFuncIndex { // R-type function indices
+enum RFuncIndex { // R-type function indices
   ADD = 0,
   SUB = 1,
   XOR = 2,
@@ -68,15 +68,16 @@ enum class RFuncIndex { // R-type function indices
   DIV = 14,
   DIVU = 15,
   REM = 16,
-  REMU = 17
+  REMU = 17,
+  NUM_STATES_R
 };
 
 // The index for the dispatch tables.
-enum class IFuncIndex { // R-type function indices
-  ADD = 0,
-  OR = 1,
-  XOR = 2,
-  AND = 3,
+enum IFuncIndex { // R-type function indices
+  ADDI = 0,
+  ORI = 1,
+  XORI = 2,
+  ANDI = 3,
   SLLI = 4,
   SRLI = 5,
   SRAI = 6,
@@ -91,16 +92,25 @@ enum class IFuncIndex { // R-type function indices
   JALR = 14,
   ECALL = 15,
   // TODO:
-  EBREAK = 16
+  // EBREAK = 16,
+  NUM_STATES_I
 };
 
-enum class SFuncIndex { SB = 0, SH = 1, SW = 2 };
+enum SFuncIndex { SB = 0, SH = 1, SW = 2, NUM_STATES_S };
 
-enum class UFuncIndex { LUI = 0, AUIPC = 1 };
+enum UFuncIndex { LUI = 0, AUIPC = 1, NUM_STATES_U };
 
-enum class JFuncIndex { JAL = 0 };
+enum JFuncIndex { JAL = 0, NUM_STATES_J };
 
-enum class BFuncIndex { BEQ=0, BNE, BLT, BGE, BLTU, BGEU };
+enum BFuncIndex {
+  BEQ = 0,
+  BNE = 1,
+  BLT = 2,
+  BGE = 3,
+  BLTU = 4,
+  BGEU = 5,
+  NUM_STATES_B
+};
 
 // The return type from Decode and into the execute stage.
 struct Type_Index {
