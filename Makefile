@@ -4,7 +4,7 @@ CXX ?= g++-m			# if not already given
 RISCVCC  := riscv64-unknown-elf-gcc
 RISCVOBJ := riscv64-unknown-elf-objcopy
 
-RISCV_ARCH_FLAGS := -march=rv32im -mabi=ilp32 -ffreestanding -nostdlib \
+RISCV_ARCH_FLAGS := -march=rv32imf -mabi=ilp32f -ffreestanding -nostdlib \
 		-ffunction-sections -Wl,--gc-sections
 RISCV_COMMON_FLAGS := $(RISCV_ARCH_FLAGS) -Wall -Wextra -Werror
 

@@ -1,5 +1,4 @@
 #include "../lib/includes/lib.h"
-#include "../lib/includes/syscall.h"
 
 int factorial(int n) {
   if (n > 1) {
@@ -10,9 +9,9 @@ int factorial(int n) {
 
 int main() {
   volatile int res = factorial(5);
-  char str[5] = {0};
+  char str[256] = {0};
   itoa(res, str, 10);
-  strcat(str, "\n");
-  write(1, str, strlen(str));
+  fputs("The result is: ", stdout);
+  puts(str);
   return 0;
 }
