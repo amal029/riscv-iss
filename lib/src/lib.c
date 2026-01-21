@@ -81,11 +81,24 @@ inline void *memset(void *ptr, int c, unsigned int n) {
   return ptr;
 }
 
-void putc(volatile char c) { write(stdout, (void *)&c, 1); }
+inline void putc(volatile char c) { write(stdout, (void *)&c, 1); }
 
-void puts(const char *s) {
+inline void puts(const char *s) {
   write(stdout, (void *)s, strlen(s));
   putc('\n');
 }
 
-void fputs(const char *s, unsigned int fd) { write(fd, (void *)s, strlen(s)); }
+inline void fputs(const char *s, unsigned int fd) { write(fd, (void *)s, strlen(s)); }
+
+inline int strcmp(const char *s1, const char *s2) {
+  int ret;
+  while ((ret = (*s1 - *s2)) == 0) {
+    if (!*s1 || !*s2) {
+      break;
+    } else {
+      ++s1;
+      ++s2;
+    }
+  }
+  return ret;
+}

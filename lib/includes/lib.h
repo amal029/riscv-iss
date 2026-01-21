@@ -3,6 +3,7 @@
 #define stdout 1
 #define stderr 2
 #define stdin 0
+#define NULL ((void*)0)
 
 /* This library only supports 32-bit RISCV architecture */
 
@@ -34,3 +35,6 @@ void putc(char c);
 
 /* Write to provided file descriptor */
 void fputs(const char *, unsigned int);
+
+/* Compare two strings. Does not check for NULL */
+int strcmp(const char *s1, const char *s2);
