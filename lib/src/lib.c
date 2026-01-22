@@ -69,7 +69,7 @@ inline char *strcat(char *dest, const char *s) {
 
 inline void *memcpy(void *dest, const void *src, unsigned int bytes) {
   for (unsigned int ret = 0; ret < bytes; ++ret)
-    ((char *)dest)[ret] = ((char *)src)[ret];
+    ((unsigned char *)dest)[ret] = ((unsigned char *)src)[ret];
   return dest;
 }
 
@@ -99,6 +99,16 @@ inline int strcmp(const char *s1, const char *s2) {
       ++s1;
       ++s2;
     }
+  }
+  return ret;
+}
+
+inline int memcmp(const void *s1, const void *s2, unsigned int bytes) {
+  bytes -= 1;
+  int ret;
+  while ((ret = (*((unsigned char *)s1 + bytes) -
+                 *((unsigned char *)s2 + bytes))) == 0) {
+    --bytes;
   }
   return ret;
 }

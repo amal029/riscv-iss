@@ -38,3 +38,6 @@ void fputs(const char *, unsigned int);
 
 /* Compare two strings. Does not check for NULL */
 int strcmp(const char *s1, const char *s2);
+
+/* Compare bytes arrays as unsigned char */
+int memcmp(const void *s1, const void *s2, unsigned int bytes);

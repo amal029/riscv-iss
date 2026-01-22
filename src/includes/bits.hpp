@@ -4,7 +4,19 @@
 #include "system.hpp"
 
 // This is used to get the type of instruction being executed
-enum class ITYPES { R = 0, I = 1, J = 2, B = 3, U = 4, S = 5 };
+enum class ITYPES : std::uint8_t {
+  R = 0,
+  I = 1,
+  J = 2,
+  B = 3,
+  U = 4,
+  S = 5,
+  FloatI = 6,
+  FloatS = 7,
+  FloatR = 8,
+  FloatR4 = 9,
+  FloatCSR = 10
+};
 
 // What part of the instruction is encoded in different parts
 struct INST_BIT_SHIFT {
@@ -12,11 +24,12 @@ struct INST_BIT_SHIFT {
   constexpr static uint8_t RD_SHIFT = 7;
   constexpr static uint8_t RS1_SHIFT = 15;
   constexpr static uint8_t RS2_SHIFT = 20;
+  constexpr static uint8_t R3_SHIFT = 27;
   constexpr static uint8_t I_IMM_SHIFT = 20;
   constexpr static uint8_t U_IMM_SHIFT = 12;
   constexpr static uint8_t S_IMM_LOWER_SHIFT = 7;
   constexpr static uint8_t S_IMM_UPPER_SHIFT = 25;
-  constexpr static uint8_t S_IMM_UPPER_L_SHIFT = 5;  
+  constexpr static uint8_t S_IMM_UPPER_L_SHIFT = 5;
 
   // The J-type shifts
   constexpr static uint8_t J_SHIFT1 = 21;
@@ -43,7 +56,6 @@ struct INST_BIT_SHIFT {
   constexpr static uint8_t OPCODE_SHIFT = 0;
   constexpr static uint8_t FUNCT3_SHIFT = 12;
   constexpr static uint8_t FUNCT7_SHIFT = 25;
-
 };
 
 // TODO: Generate the indices using X-macros
@@ -112,6 +124,48 @@ enum BFuncIndex {
   NUM_STATES_B
 };
 
+enum Float_IIndex { FLW = 0, NUM_Float_I };
+
+enum Float_SIndex { FSW = 0, NUM_Float_S };
+
+enum Float_R4Index { FMADD_S = 0, FMSUB_S, FNMSUB_S, FNMADD_S, NUM_Float_R4 };
+
+enum Float_RIndex {
+  FADD_S = 0,
+  FSUB_S,
+  FMUL_S,
+  FDIV_S,
+  FSQRT_S,
+  FSGNJ_S,
+  FSGNJN_S,
+  FSGNJX_S,
+  FMIN_S,
+  FMAX_S,
+  FCVT_S_W,
+  FCVT_S_WU,
+  FMV_W_X,
+  FMV_X_W,  
+  FEQ_S,
+  FLT_S,
+  FLE_S,
+  FCLASS_S,
+  FCVT_W_S,
+  FCVT_WU_S,
+  NUM_Float_R
+};
+
+enum Float_CSRIndex {
+  FRFLAGS,
+  FSFLAGS,
+  FSFLAGSI,
+  FRRM,
+  FSRM,
+  FSRMI,
+  FSCSR,
+  FRCSR,
+  NUM_Float_CSR
+};
+
 // The return type from Decode and into the execute stage.
 struct Type_Index {
   ITYPES type; // The type of instruction to execute
@@ -122,6 +176,11 @@ struct Type_Index {
     UFuncIndex uindex;
     JFuncIndex jindex;
     BFuncIndex bindex;
+    Float_IIndex fiindex;
+    Float_SIndex fsindex;
+    Float_R4Index fr4index;
+    Float_RIndex frindex;
+    Float_CSRIndex fcsrindex;
   }; // The lookup index for the function ptr to execute.
 };
 
@@ -130,6 +189,7 @@ struct Masks {
   constexpr static uword_t RD_MASK = 0b11111;
   constexpr static uword_t RS1_MASK = RD_MASK;
   constexpr static uword_t RS2_MASK = RD_MASK;
+  constexpr static uword_t RS3_MASK = RD_MASK;  
   constexpr static uword_t I_IMM_MASK = 0b111111111111;
   constexpr static uword_t S_IMM_LOWER_MASK = 0b11111;
   constexpr static uword_t S_IMM_UPPER_MASK = 0b1111111;

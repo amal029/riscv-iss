@@ -86,16 +86,17 @@ std::vector<uint8_t> readFile(const std::string &filename) {
   return buffer;
 }
 
-void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec) {
+void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec, bool br) {
   exec.setPC_Change();
   exec.setRegFile(0, 0);
   // First fetch the instruction from I-memory
   inst = Fetch::fetch(MEM, PC);
-#ifdef INST  
-  fprintf(stderr, "%zx:", PC);
-  print_word(inst);
-  std::cout << "\n";
-#endif
+  if (br) {
+    fprintf(stderr, "%zx:", PC);
+    print_word(inst);
+    std::cout << "\n";
+  }
+
   // Then Decode instruction using decode class
   Type_Index val = Decode::decode(inst);
   // Then execute the instruction using the Execute class
@@ -107,17 +108,15 @@ void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec) {
 }
 
 void add_break_points(std::vector<size_t> &breaks) {
-  std::cout
-      << "Add breakpoints (in hex) like so: \"b <prog-address-in-hex>\"\n";
-  std::cout << "q exists adding break points\n";
-  std::string input;
-  while (std::getline(std::cin, input)) {
-    if (input == "q") {
+  std::cout << "Add breakpoints as numbers in hex, e.g., fc\n";
+  std::cout << "q for quitting\n";
+  std::string in;
+  while (1) {
+    std::cin >> in;
+    if (in == "q") {
       break;
     } else {
-      std::string token = input.substr(input.find(" "), input.size());
-      // Convert from hex to
-      breaks.emplace_back(std::stoull(token, nullptr, 16));
+      breaks.emplace_back(std::stoull(in, nullptr, 16));
     }
   }
 }
@@ -128,7 +127,6 @@ int main(int argc, char **argv) {
     std::cout << "Please run the program with ./iss <file-name>.bin\n";
     exit(1);
   } else {
-    std::cout << "Reading the binary file\n";
     file = readFile(std::string{argv[1]});
   }
   // The program counter -- starts at the _start
@@ -136,8 +134,11 @@ int main(int argc, char **argv) {
   // Flag to see of the PC has changed.
   bool PC_change = false;
 
-  // This is the register file -- 32-bit machine
+  // This is the register file -- 32-bit machine (Ints)
   word_t REGFILE[REGS] = {0};
+
+  // This is the register file -- 32-bit machine (Floats)
+  fword_t REGFILE_FLOAT[REGS] = {0.0f};
 
   // This is the data + instruction memory with shared address space.
   uint8_t MEM[(ISIZE + DSIZE) * Config::KB] = {0x00}; // total mem size
@@ -147,36 +148,47 @@ int main(int argc, char **argv) {
 
   uint32_t inst = 0;
   // Type_Index val;
-  Execute exec{REGFILE, MEM, &PC, &PC_change};
+  Execute exec{REGFILE, REGFILE_FLOAT, MEM, &PC, &PC_change};
   unsigned char input;
 
   // Add all the breakpoints
   std::vector<size_t> breaks{};
-  add_break_points(breaks);
 
-  // The last byte in memory to allow it to grow upwards.
-  // REGFILE[2] = (ISIZE + DSIZE) * Config::KB; // SP
-  std::cout << "Press: p for registers, m for memory (shared program then "
-            << "data), s to exectute 1 instruction, r for run to program end. "
-               "Finally q to quit\n";
+  std::cout << "p: for printing registers\n";
+  std::cout << "m: for printing memory\n";
+  std::cout << "a: for adding breakpoints\n";
+  std::cout << "l: for printing registered breakpoints\n";
+  std::cout << "r: to run the program\n";
+  std::cout << "s: to step to next instruction\n";
+  std::cout << "q: to quit\n";
   std::cin >> input;
   while (1) {
     // Here we can dump the registers and memory if asked for.
-    if (input == 'p') {
+    if (input == 'a') {
+      add_break_points(breaks);
+      std::cin >> input;
+    } else if (input == 'p') {
       print_registers(REGFILE, PC);
       std::cin >> input;
     } else if (input == 'm') {
       print_mem(MEM);
       std::cin >> input;
     } else if (input == 's') {
-      execute(inst, MEM, PC, exec);
+      execute(inst, MEM, PC, exec, (!breaks.empty()));
       std::cin >> input;
     } else if (input == 'r') {
-      execute(inst, MEM, PC, exec);
+      execute(inst, MEM, PC, exec, (!breaks.empty()));
       // Check if the PC has reached one of the break points then stop
       // and take input.
       if (std::find(breaks.cbegin(), breaks.cend(), PC) != breaks.cend())
         std::cin >> input;
+    } else if (input == 'l') {
+      // Print all the registered breakpoints
+      for (size_t br : breaks) {
+        std::cout << std::hex << std::setfill('0') << std::setw(8) << br << ", \t";
+      }
+      std::cout << "\n";
+      std::cin >> input;
     } else if (input == 'q') {
       break;
     }

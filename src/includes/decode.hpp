@@ -1,5 +1,6 @@
 #pragma once
 #include "bits.hpp"
+#include "execute.hpp"
 #include "opcodes.hpp"
 #include <assert.h>
 #include <bitset>
@@ -54,13 +55,204 @@ struct Decode {
       ret.type = ITYPES::U;
       ret.uindex = UFuncIndex::AUIPC;
       break;
+    case Float_OPCODES::Float_I:
+      ret.type = ITYPES::FloatI;
+      ret.fiindex = decodeFloatI(inst);
+      break;
+    case Float_OPCODES::Float_S:
+      ret.type = ITYPES::FloatS;
+      ret.fsindex = decodeFloatS(inst);
+      break;
+    case Float_OPCODES::Float_R4_ADD:
+      ret.type = ITYPES::FloatR4;
+      ret.fr4index = Float_R4Index::FMADD_S;
+      break;
+    case Float_OPCODES::Float_R4_SUB:
+      ret.type = ITYPES::FloatR4;
+      ret.fr4index = Float_R4Index::FMSUB_S;
+      break;
+    case Float_OPCODES::Float_R4_NMSUB:
+      ret.type = ITYPES::FloatR4;
+      ret.fr4index = Float_R4Index::FNMSUB_S;
+      break;
+    case Float_OPCODES::Float_R4_NMADD:
+      ret.type = ITYPES::FloatR4;
+      ret.fr4index = Float_R4Index::FNMADD_S;
+      break;
+    case Float_OPCODES::Float_R:
+      ret.type = ITYPES::FloatR;
+      ret.frindex = decodeFloatR(inst);
+      break;
     default:
       std::cout << "Cannot decode the instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
     return ret;
   }
+
+  constexpr static Float_IIndex decodeFloatI(uint32_t inst) {
+    uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
+    if (func3 == 0b010) {
+      return Float_IIndex::FLW;
+    } else {
+      std::cout << "Cannot decode the Float I-type instruction: "
+                << std::bitset<32>{inst} << "\n";
+      assert(false);
+    }
+  }
+
+  constexpr static Float_RIndex decodeFloatR(uint32_t inst) {
+    uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
+    uint8_t func7 = inst >> INST_BIT_SHIFT::FUNCT7_SHIFT & Masks::FUNC7_MASK;
+    switch (func7) {
+    case FExtension_Funct7::FADD_S_Funct7: {
+      return Float_RIndex::FADD_S;
+      break;
+    }
+    case FExtension_Funct7::FSUB_S_Funct7: {
+      return Float_RIndex::FSUB_S;
+      break;
+    }
+    case FExtension_Funct7::FMUL_S_Funct7: {
+      return Float_RIndex::FMUL_S;
+      break;
+    }
+    case FExtension_Funct7::FDIV_S_funct7: {
+      return Float_RIndex::FDIV_S;
+      break;
+    }
+    case FExtension_Funct7::FSQRT_S_Funct7: {
+      return Float_RIndex::FSQRT_S;
+      break;
+    }
+      // XXX: The below case handles 3 different opcodes
+    case FExtension_Funct7::FSGNJ_S_funct7: {
+      if (func3 == FExtension_Funct3::FSGNJ_S_Funct3)
+        return Float_RIndex::FSGNJ_S;
+      else if (func3 == FExtension_Funct3::FSGNJN_S_Funct3)
+        return Float_RIndex::FSGNJN_S;
+      else if (func3 == FExtension_Funct3::FSGNJX_S_Funct3)
+        return Float_RIndex::FSGNJX_S;
+      else {
+        std::cout << "Cannot decode instruction: " << std::bitset<32>{inst}
+                  << "\n";
+        assert(false);
+      }
+      break;
+    }
+    case FExtension_Funct7::FMIN_S_Funct7: {
+      switch (func3) {
+      case FExtension_Funct3::FMIN_S_Funct3: {
+        return Float_RIndex::FMIN_S;
+        break;
+      }
+      case FExtension_Funct3::FMAX_S_Funct3: {
+        return Float_RIndex::FMAX_S;
+        break;
+      }
+      default: {
+        std::cout << "Cannot decode Float R-type the instruction: "
+                  << std::bitset<32>{inst} << "\n";
+        assert(false);
+      }
+      }
+      break;
+    }
+    case FExtension_Funct7::FCVT_W_S_Funct7: {
+      uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
+      switch (rs2) {
+      case 0x0:
+        return Float_RIndex::FCVT_S_W;
+      case 0x1:
+        return Float_RIndex::FCVT_S_WU;
+      default:
+        std::cout << "Cannot decode Float R-type the instruction: "
+                  << std::bitset<32>{inst} << "\n";
+        assert(false);
+      }
+      break;
+    }
+    case FExtension_Funct7::FMV_X_W_Funct7: {
+      if (func3 == FExtension_Funct3::FMV_X_W_Funct3) {
+        uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
+        if (rs2 == 0) {
+          return Float_RIndex::FMV_X_W;
+        } else {
+          std::cout << "Cannot decode Float R-type the instruction: "
+                    << std::bitset<32>{inst} << "\n";
+          assert(false);
+        }
+      } else if (func3 == FExtension_Funct3::FCLASS_S_Funct3) {
+        uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
+        if (rs2 == 0b001) {
+          return Float_RIndex::FCLASS_S;
+        } else {
+          std::cout << "Cannot decode Float R-type the instruction: "
+                    << std::bitset<32>{inst} << "\n";
+          assert(false);
+        }
+      } else {
+        std::cout << "Cannot decode Float R-type the instruction: "
+                  << std::bitset<32>{inst} << "\n";
+        assert(false);
+        }
+    }
+    case FExtension_Funct7::FEQ_S_Funct7: {
+      switch (func3) {
+      case FExtension_Funct3::FEQ_S_Funct3:
+        return Float_RIndex::FEQ_S;
+      case FExtension_Funct3::FLT_S_Funct3:
+        return Float_RIndex::FLT_S;
+      case FExtension_Funct3::FLE_S_Funct3:
+        return Float_RIndex::FLE_S;
+      default:
+        std::cout << "Cannot decode Float R-type the instruction: "
+                  << std::bitset<32>{inst} << "\n";
+        assert(false);
+      }
+    }
+    case FExtension_Funct7::FCVT_S_W_Funct7: {
+      uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
+      if (rs2 == 0) {
+        return Float_RIndex::FCVT_S_W;
+      } else if (rs2 == 0b00001) {
+        return Float_RIndex::FCVT_S_WU;
+      } else {
+        std::cout << "Cannot decode Float R-type the instruction: "
+                  << std::bitset<32>{inst} << "\n";
+        assert(false);
+      }
+    }
+    case FExtension_Funct7::FMV_W_X_Funct7: {
+      uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
+      if (func3 == FExtension_Funct3::FMV_W_X_Funct3 && rs2 == 0) {
+        return Float_RIndex::FMV_W_X;
+      } else {
+        std::cout << "Cannot decode Float R-type the instruction: "
+                  << std::bitset<32>{inst} << "\n";
+        assert(false);
+      }
+    }
+    default: {
+      std::cout << "Cannot decode Float R-type the instruction: "
+                << std::bitset<32>{inst} << "\n";
+      assert(false);
+    }
+    }
+  }
+
+  constexpr static Float_SIndex decodeFloatS(uint32_t inst) {
+    uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
+    if (func3 == 0b010) {
+      return Float_SIndex::FSW;
+    } else {
+      std::cout << "Cannot decode the Float S-type instruction: "
+                << std::bitset<32>{inst} << "\n";
+      exit(1);
+    }
+  }
+
   // TODO: Fill these in correctly to complete the decoder.
   constexpr static RFuncIndex decodeR(uint32_t inst) {
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
@@ -144,7 +336,7 @@ struct Decode {
     case S_FUNC3::OP_S_W:
 #ifdef DEBUG
       std::cout << "Performing STORE WORD\n";
-#endif      
+#endif
       return SFuncIndex::SW;
     default:
       std::cout << "Cannot decode S-type instruction: " << std::bitset<32>{inst}

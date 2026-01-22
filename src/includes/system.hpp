@@ -15,5 +15,8 @@
 // The type of the register file
 using word_t = int32_t;
 
+// The type of the register file
+using fword_t = float;
+
 // The unsigned version of the word type
 using uword_t = uint32_t;
