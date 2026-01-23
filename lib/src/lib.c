@@ -1,19 +1,8 @@
 #include "../includes/lib.h"
 #include "../includes/syscodes.h"
 
-// Function to print a buffer using RISC-V ecall
-void write(int fd, void *buf, unsigned int len) {
-  register int a0 asm("a0") = fd;           /* file descriptor to write to */
-  register void *a1 asm("a1") = buf;        /* address */
-  register unsigned int a2 asm("a2") = len; /* length of the buffer */
-  register long a7 asm("a7") = SYS_WRITE;   /* SYS_WRITE */
-
-  asm volatile("ecall"
-               : /* no output */
-               : "r"(a0), "r"(a1), "r"(a2), "r"(a7));
-}
-
-__attribute__((optimize("O0"))) void itoa(int value, char *str, unsigned int base) {
+__attribute__((optimize("O1"))) void itoa(int value, char *str,
+                                          unsigned int base) {
   static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   int i = 0;
   int neg = 0;
@@ -123,7 +112,9 @@ inline void puts(const char *s) {
   putc('\n');
 }
 
-inline void fputs(const char *s, unsigned int fd) { write(fd, (void *)s, strlen(s)); }
+inline void fputs(const char *s, unsigned int fd) {
+  write(fd, (void *)s, strlen(s));
+}
 
 inline int strcmp(const char *s1, const char *s2) {
   int ret;

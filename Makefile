@@ -10,7 +10,7 @@ RISCV_ARCH_FLAGS := -march=rv32imf -mabi=ilp32f -ffreestanding -nostdlib \
 RISCV_COMMON_FLAGS := $(RISCV_ARCH_FLAGS) -Wall -Wextra -Werror
 
 # The flags for com
-RISCVFLAGS := -O0 $(RISCV_COMMON_FLAGS)
+RISCVFLAGS := -O3 $(RISCV_COMMON_FLAGS)
 
 # The flags for compiling our libc
 RISCVLIBFLAGS := -O3 $(RISCV_COMMON_FLAGS)
