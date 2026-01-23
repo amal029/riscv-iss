@@ -1,4 +1,5 @@
-CXXFLAGS := -O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow
+CXXFLAGS := -O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow \
+	-Wswitch-enum
 CXX ?= g++-m			# if not already given
 
 RISCVCC  := riscv64-unknown-elf-gcc
@@ -9,7 +10,7 @@ RISCV_ARCH_FLAGS := -march=rv32imf -mabi=ilp32f -ffreestanding -nostdlib \
 RISCV_COMMON_FLAGS := $(RISCV_ARCH_FLAGS) -Wall -Wextra -Werror
 
 # The flags for com
-RISCVFLAGS := -O3 $(RISCV_COMMON_FLAGS)
+RISCVFLAGS := -O0 $(RISCV_COMMON_FLAGS)
 
 # The flags for compiling our libc
 RISCVLIBFLAGS := -O3 $(RISCV_COMMON_FLAGS)

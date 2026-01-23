@@ -28,6 +28,27 @@ void print_byte(uint8_t x) {
             << static_cast<int>(x);
 }
 
+void print_fregisters(fword_t *regs) {
+  for (size_t i = 0; i < REGS; ++i) {
+    if (i >= 0 && i <= 7) {
+      std::cout << "ft" << i << ": " << (float)regs[i];
+    } else if (i >= 8 && i <= 9) {
+      std::cout << "fs" << (i - 8) << ": " << (float)regs[i];
+    } else if (i >= 10 && i <= 17) {
+      std::cout << "fa" << (i - 10) << ": " << (float)regs[i];
+    } else if (i >= 18 && i <= 27) {
+      std::cout << "fs" << (i - 18 + 2) << ": " << (float)regs[i];
+    } else {
+      std::cout << "ft" << (i - 28) << ": " << (float)regs[i];
+    }
+    if (i > 0 && i % 4 == 0)
+      std::cout << "\n";
+    else
+      std::cout << "\t";
+  }
+  std::cout << "\n";
+}
+
 void print_registers(word_t *regs, size_t PC) {
   for (size_t i = 0; i < REGS; ++i) {
     if (i == 2) {
@@ -169,6 +190,7 @@ int main(int argc, char **argv) {
       std::cin >> input;
     } else if (input == 'p') {
       print_registers(REGFILE, PC);
+      print_fregisters(REGFILE_FLOAT);
       std::cin >> input;
     } else if (input == 'm') {
       print_mem(MEM);

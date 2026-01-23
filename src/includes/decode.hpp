@@ -103,6 +103,9 @@ struct Decode {
   }
 
   constexpr static Float_RIndex decodeFloatR(uint32_t inst) {
+#ifdef DEBUG
+    std::cout << std::bitset<32>{inst} << "\n";
+#endif    
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     uint8_t func7 = inst >> INST_BIT_SHIFT::FUNCT7_SHIFT & Masks::FUNC7_MASK;
     switch (func7) {
@@ -160,12 +163,15 @@ struct Decode {
       break;
     }
     case FExtension_Funct7::FCVT_W_S_Funct7: {
+#ifdef DEBUG
+      std::cout << "FCVT_W_S_Func7 instruction\n";
+#endif      
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
       switch (rs2) {
       case 0x0:
-        return Float_RIndex::FCVT_S_W;
+        return Float_RIndex::FCVT_W_S;
       case 0x1:
-        return Float_RIndex::FCVT_S_WU;
+        return Float_RIndex::FCVT_WU_S;
       default:
         std::cout << "Cannot decode Float R-type the instruction: "
                   << std::bitset<32>{inst} << "\n";

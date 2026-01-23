@@ -14,6 +14,9 @@ void write(int fd, void *buf, unsigned int len);
 /* Function to convert int to string, with \0 termination */
 void itoa(int, char *, unsigned int);
 
+/* Function to convert float to string with \0 termination */
+void ftoa(float num, char *str, int str_bytes);
+
 /* Function to get the length of the string without \0 terminator */
 unsigned int strlen(const char *);
 

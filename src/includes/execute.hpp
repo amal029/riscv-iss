@@ -281,7 +281,7 @@ struct IFuncs {
       address = reg[11];
       len = reg[12];
 #ifdef DEBUG
-      printf("%d,%x,%d", fd, address, len);
+      printf("%d,%x,%lu", fd, address, len);
 #endif
       write(fd, DMEM + address, len);
       break;
@@ -503,21 +503,31 @@ struct FExtension {
   [[gnu::always_inline]]
   static void FSGNJ_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                       uint8_t rd) {
-    uint8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
+    int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
+#ifdef DEBUG
+    std::cout << "FSGNJ_S: " << freg[rs1]
+              << "abs value: " << std::abs(freg[rs1]) << "sgn: " << sgn << "\n";
+#endif
     freg[rd] = std::abs(freg[rs1]) * sgn;
+#ifdef DEBUG
+    std::cout << "FSGNJ_S result: " << freg[rd] << "\n";
+#endif
   }
 
   [[gnu::always_inline]]
   static void FSGNJN_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                        uint8_t rd) {
-    uint8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
+    int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
+#ifdef DEBUG
+    std::cout << "FSGNJN_S: " << std::abs(freg[rs1]) << "sgn: " << sgn << "\n";
+#endif
     freg[rd] = std::abs(freg[rs1]) * -sgn;
   }
 
   [[gnu::always_inline]]
   static void FSGNJX_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                        uint8_t rd) {
-    uint8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
+    int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
     freg[rd] = freg[rs1] * sgn;
   }
 
@@ -548,6 +558,10 @@ struct FExtension {
   [[gnu::always_inline]]
   static void FCVT_W_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                        uint8_t rd) {
+#ifdef DEBUG
+    std::cout << (float)freg[rs1] << "\n";
+    std::cout << (word_t)freg[rs1] << "\n";
+#endif
     reg[rd] = (word_t)freg[rs1];
   }
 
@@ -573,19 +587,25 @@ struct FExtension {
   [[gnu::always_inline]]
   static void FEQ_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                     uint8_t rd) {
-    reg[rd] = (freg[rs1] == freg[rs2]) ? 1 : 0;
+#ifdef DEBUG
+    std::cout << "FEQ_S: " << (freg[rs1] == freg[rs2]);
+#endif
+    reg[rd] = freg[rs1] == freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FLT_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                     uint8_t rd) {
-    reg[rd] = (freg[rs1] < freg[rs2]) ? 1 : 0;
+#ifdef DEBUG
+    std::cout << "FLT_S: " << (freg[rs1] < freg[rs2]) << "\n";
+#endif
+    reg[rd] = freg[rs1] < freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FLE_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                     uint8_t rd) {
-    reg[rd] = (freg[rs1] <= freg[rs2]) ? 1 : 0;
+    reg[rd] = freg[rs1] <= freg[rs2];
   }
 
   [[gnu::always_inline]]

@@ -13,7 +13,7 @@ void write(int fd, void *buf, unsigned int len) {
                : "r"(a0), "r"(a1), "r"(a2), "r"(a7));
 }
 
-void itoa(int value, char *str, unsigned int base) {
+__attribute__((optimize("O0"))) void itoa(int value, char *str, unsigned int base) {
   static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   int i = 0;
   int neg = 0;
@@ -48,6 +48,41 @@ void itoa(int value, char *str, unsigned int base) {
     left++;
     right--;
   }
+}
+
+void ftoa(float num, char *str, int str_bytes) {
+  char *p = str;
+
+  // Handle negative numbers
+  if (num < 0) {
+    *p++ = '-';
+    num = -num;
+  }
+
+  // Extract integer part
+  int ipart = (int)num;
+  itoa(ipart, p, 10);
+  int str_len = strlen(p);
+  p += str_len;
+
+  // Add decimal point
+  *p++ = '.';
+
+  // Extract fractional part
+  float fpart = num - ipart;
+  int ndig = 0;
+  char *endp = str + str_bytes - 1;
+
+  /* The max number of digits after . is 3 */
+  while (fpart != 0 && ndig < 3 && p < endp) {
+    fpart *= 10;
+    int digit = (int)fpart;
+    *p++ = '0' + digit;
+    fpart -= digit;
+    ndig++;
+  }
+
+  *p = '\0';
 }
 
 inline unsigned int strlen(const char *str) {
