@@ -8,15 +8,19 @@
 #include <iostream>
 
 struct Decode {
-  // This class decodes the instructions
 
   // Error output
   static void error(uint32_t inst) {
     std::cerr << "Cannot decode the instruction: " << std::bitset<32>{inst}
               << "\n";
+    std::cerr << "Termination occurred at " << __FILE__ << ":" << __LINE__
+              << std::endl;
+    std::abort();
   }
 
+  // Custom ctor
   Decode() = delete;
+
   // First we check the top level decode bits
   static Type_Index decode(uint32_t inst) {
     Type_Index ret;
@@ -91,7 +95,7 @@ struct Decode {
       break;
     default:
       error(inst);
-      assert(false);
+      std::abort();
     }
     return ret;
   }
@@ -102,14 +106,14 @@ struct Decode {
       return Float_IIndex::FLW;
     } else {
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
 
   constexpr static Float_RIndex decodeFloatR(uint32_t inst) {
 #ifdef DEBUG
     std::cout << std::bitset<32>{inst} << "\n";
-#endif    
+#endif
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     uint8_t func7 = inst >> INST_BIT_SHIFT::FUNCT7_SHIFT & Masks::FUNC7_MASK;
     switch (func7) {
@@ -142,8 +146,8 @@ struct Decode {
       else if (func3 == FExtension_Funct3::FSGNJX_S_Funct3)
         return Float_RIndex::FSGNJX_S;
       else {
-	error(inst);
-        assert(false);
+        error(inst);
+        std::abort();
       }
       break;
     }
@@ -158,8 +162,8 @@ struct Decode {
         break;
       }
       default: {
-	error(inst);
-        assert(false);
+        error(inst);
+        std::abort();
       }
       }
       break;
@@ -167,7 +171,7 @@ struct Decode {
     case FExtension_Funct7::FCVT_W_S_Funct7: {
 #ifdef DEBUG
       std::cout << "FCVT_W_S_Func7 instruction\n";
-#endif      
+#endif
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
       switch (rs2) {
       case 0x0:
@@ -175,8 +179,8 @@ struct Decode {
       case 0x1:
         return Float_RIndex::FCVT_WU_S;
       default:
-	error(inst);
-        assert(false);
+        error(inst);
+        std::abort();
       }
       break;
     }
@@ -186,21 +190,22 @@ struct Decode {
         if (rs2 == 0) {
           return Float_RIndex::FMV_X_W;
         } else {
-	  error(inst);
-          assert(false);
+          error(inst);
+          std::abort();
         }
       } else if (func3 == FExtension_Funct3::FCLASS_S_Funct3) {
         uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
         if (rs2 == 0b001) {
           return Float_RIndex::FCLASS_S;
         } else {
-	  error(inst);
-          assert(false);
+          error(inst);
+          std::abort();
         }
       } else {
-	error(inst);
-        assert(false);
-        }
+        error(inst);
+        std::abort();
+      }
+      break;
     }
     case FExtension_Funct7::FEQ_S_Funct7: {
       switch (func3) {
@@ -211,8 +216,8 @@ struct Decode {
       case FExtension_Funct3::FLE_S_Funct3:
         return Float_RIndex::FLE_S;
       default:
-	error(inst);
-        assert(false);
+        error(inst);
+        std::abort();
       }
     }
     case FExtension_Funct7::FCVT_S_W_Funct7: {
@@ -223,7 +228,7 @@ struct Decode {
         return Float_RIndex::FCVT_S_WU;
       } else {
         error(inst);
-        assert(false);
+        std::abort();
       }
     }
     case FExtension_Funct7::FMV_W_X_Funct7: {
@@ -231,13 +236,13 @@ struct Decode {
       if (func3 == FExtension_Funct3::FMV_W_X_Funct3 && rs2 == 0) {
         return Float_RIndex::FMV_W_X;
       } else {
-	error(inst);
-        assert(false);
+        error(inst);
+        std::abort();
       }
     }
     default: {
       error(inst);
-      assert(false);
+      std::abort();
     }
     }
   }
@@ -248,7 +253,7 @@ struct Decode {
       return Float_SIndex::FSW;
     } else {
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
 
@@ -300,7 +305,7 @@ struct Decode {
       return RFuncIndex::REMU;
     } else {
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
   constexpr static BFuncIndex decodeB(uint32_t inst) {
@@ -320,7 +325,7 @@ struct Decode {
       return BFuncIndex::BGEU;
     default:
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
   static SFuncIndex decodeS(uint32_t inst) {
@@ -337,7 +342,7 @@ struct Decode {
       return SFuncIndex::SW;
     default:
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
   static IFuncIndex decodeILoad(uint32_t inst) {
@@ -355,7 +360,7 @@ struct Decode {
       return IFuncIndex::LHU;
     default:
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
   static IFuncIndex decodeIJump(uint32_t inst) {
@@ -364,7 +369,7 @@ struct Decode {
       return IFuncIndex::JALR;
     else {
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
   static IFuncIndex decodeIMath(uint32_t inst) {
@@ -392,7 +397,7 @@ struct Decode {
       return IFuncIndex::SLTIU;
     else {
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
   static IFuncIndex decodeICall(uint32_t inst) {
@@ -403,10 +408,10 @@ struct Decode {
       return IFuncIndex::ECALL;
     else if (func3 == IE_FUNC3::OP_F3_EBREAK && imm == 0x1) {
       error(inst);
-      assert(false);
+      std::abort();
     } else {
       error(inst);
-      assert(false);
+      std::abort();
     }
   }
 };
