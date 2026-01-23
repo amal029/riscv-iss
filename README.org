@@ -1,0 +1,542 @@
+#+options: html-link-use-abs-url:nil html-postamble:auto toc:nil
+#+options: html-preamble:t html-scripts:nil html-style:t
+#+options: html5-fancy:nil tex:t
+#+html_doctype: xhtml-strict
+#+html_container: div
+#+html_content_class: content
+#+description:
+#+keywords:
+#+html_link_home:
+#+html_link_up:
+#+html_mathjax:
+#+html_equation_reference_format: \eqref{%s}
+#+html_head:
+#+subtitle:
+#+infojs_opt:
+#+creator: <a href="https://www.gnu.org/software/emacs/">Emacs</a> 31.0.50 (<a href="https://orgmode.org">Org</a> mode 9.7.11)
+#+latex_header:
+
+
+* What is this project/code?
+  This is a [[https://riscv.github.io/riscv-isa-manual/snapshot/unprivileged/][RICSV]] 32-bit Instruction Set Simulator (ISS).
+  
+* What does it support?
+  It supports Base RISCV32 instruction set + M
+  (multiplication/division) + F (Single precision 32-bit) floating point
+  instruction set. See: [[https://www.cs.sfu.ca/~ashriram/Courses/CS295/assets/notebooks/RISCV/RISCV_CARD.pdf][Instruction set semantics]]
+
+* What can it be used for?
+  Many things:
+  1. Developing software for RISCV 32 bit processor, if you don't have the hardware.
+  2. Debugging programs.
+  3. Tracing and profiling the instruction flow
+  4. Extending the RISCV processor with newer instructions to test their benefits
+  5. ....and many more
+
+* How do you run it?
+  The project is open source (MIT licensed) and written in C++-17.
+
+** Programs needed to compile the ISS
+  1. A C++ compiler for your host machine, e.g., Intel/AMD running Linux
+     or OSX. This can be installed using your package manager.
+     
+  2. A C/C++ cross compiler for the RISCV instruction set. You can get
+     the cross compiler from here: [[https://github.com/riscv-collab/riscv-gnu-toolchain][RISCV GNU COMPILER]]
+     
+  3. Once both are installed, do the following on the terminal:
+     #+begin_src bash
+       cd riscv-iss			# Change to cloned directory
+       make clean && make		# make the ISS
+     #+end_src
+  4. The above command should result in the following output:
+     #+begin_src bash
+       rm -rf iss ./tests/*.elf ./tests/*.bin ./lib/asm/*.o ./lib/src/*.o
+       c++ -O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow -Wswitch-enum ./src/main.cpp -o iss
+     #+end_src
+  5. The ISS binary is called ~iss~.
+  6. Now we can run a C/C++ (or any language that compiles to RISCV32)
+     program using the ~iss~.
+
+** Example of running a C program using the ISS.
+An example C program computing the ~sin~ of a given angle using
+Taylor polynomial is given below. This file is called ~sin_taylor.c~
+in ~tests~ folder.
+#+begin_src C
+     #include "../lib/includes/lib.h" /* Include the library header */
+
+     #define PI 3.141592653589f
+
+     // Function to compute sin(x) using Taylor series (x in radians)
+     float sin_taylor(float x) {
+       // Reduce x to the range [-π, π] using periodicity
+       x = x - (int)(x / (2 * PI)) * (2 * PI); // Normalize to [-2π, 2π]
+
+       // Use symmetry: sin(-x) = -sin(x)
+       int sign = (x < 0) ? 1 : -1;
+       x = (x < 0) ? -x : x;
+
+       // Use the iterative method to compute series efficiently
+       float term = x;
+       float sum = term;
+       int n = 1; // Term index (1 for x^1/1!)
+
+       // Continue until term becomes negligible
+       while (term > 1e-6f || term < -1e-6f) {
+         // Update term: next term = previous term * (-x²) / ((2n)(2n+1))
+         term = term * (-x * x) / ((2 * n) * (2 * n + 1));
+         sum += term;
+         n++;
+       }
+
+       return sign * sum;
+     }
+
+     int main() {
+       float angle_deg = -30.0f;
+       float angle_rad = angle_deg * PI / 180.0f;
+       float result = sin_taylor(angle_rad);
+       char res[256];
+       ftoa(result, res, 256);
+       fputs("Sin -30 degrees is: ", stdout);
+       puts(res);
+
+       angle_deg = 30.0f;
+       angle_rad = angle_deg * PI / 180.0f;
+       result = sin_taylor(angle_rad);
+       ftoa(result, res, 256);
+       fputs("Sin 30 degrees is: ", stdout);
+       puts(res);
+       
+       return 0;
+     }
+   #+end_src
+   1. Compile this file using the RISCV cross compiler like so:
+      #+begin_src bash
+	FNAME=./tests/sin_taylor make -B binary
+      #+end_src
+   2. The output would look like so:
+      #+begin_src bash
+	riscv64-unknown-elf-gcc -O3 -march=rv32imf -mabi=ilp32f \ # The -march and -mabi specify the architecture and the ABI, respectively.
+					-ffreestanding -nostdlib -ffunction-sections \
+					-Wl,--gc-sections -Wall -Wextra -Werror  \
+					-c lib/src/lib.c -o lib/src/lib.o
+	riscv64-unknown-elf-gcc -O3 -march=rv32imf -mabi=ilp32f -ffreestanding \
+				-nostdlib -ffunction-sections -Wl,--gc-sections \
+				-Wall -Wextra -Werror -c ./lib/asm/start.S -o ./lib/asm/start.o
+	riscv64-unknown-elf-gcc -O3 -march=rv32imf -mabi=ilp32f -ffreestanding \
+				-nostdlib -ffunction-sections -Wl,--gc-sections \
+				-Wall -Wextra -Werror -T linker.ld ./lib/asm/start.o \
+		./tests/sin_taylor.c -o ./tests/sin_taylor.elf -L./lib/src ./lib/src/lib.o
+	riscv64-unknown-elf-objcopy -O binary ./tests/sin_taylor.elf ./tests/sin_taylor.bin
+      #+end_src
+   3. We now have two files compiled in the ~./tests~ directory:
+      * ~./tests/sin_taylor.elf~ -- the ELF file.
+      * ~./tests/sin_taylor.bin~ -- the binary file without the ELF headers.
+      * We have compiled a stand-alone, without OS and standard library
+        supported ELF file first.
+      * Then we have extracted the binary .text and .data sections from
+        the ELF file to load into the ISS.
+   4. Now can now execute the ~sin_taylor.bin~ file using the ISS; like
+      so:
+      #+begin_src bash
+	riscv-iss % ./iss ./tests/sin_taylor.bin # ./iss is the ISS and the .bin is the input file
+      #+end_src
+   5. The output should be the following:
+      #+begin_src bash
+	p: for printing registers
+	m: for printing memory
+	a: for adding breakpoints
+	l: for printing registered breakpoints
+	r: to run the program
+	s: to step to next instruction
+	q: to quit
+      #+end_src
+   6. We can now run the ISS to execute the compiled binary by pressing ~r~.
+   7. The output should be the following:
+      #+begin_src bash
+	Sin -30 degrees is: -0.5
+	Sin 30 degrees is: 0.5
+      #+end_src
+   8. This is as expected from the C source code above.
+
+** Debugging the program
+   Debugging the program includes two steps:
+   1. Dumping the assembler output from the ELF file to see disassembled
+      source code. This will be used to set the breakpoints. In order to
+      get the assembler source code from the ~sin_taylor.elf~ file do the
+      following:
+      #+begin_src bash
+	riscv64-unknown-elf-objdump -D ./tests/sin_taylor.elf
+      #+end_src
+   2. The important parts of the  output would be the following:
+      #+begin_src asm
+	00000000 <_start>: /*The program starts from here. The start address is 0x0 */
+	0:	00001137          	lui	sp,0x1 /*Init the stack pointer*/
+	4:	80010113          	addi	sp,sp,-2048 # 800 <digits.0+0x468> /*setting stack pointer to 2048*/
+	8:	0a0000ef          	jal	a8 <main> /*Jump to main function*/
+
+	0000000c <_j>: /*The program stops in this infinite loop after coming back from main*/
+	c:	0000006f          	j	c <_j>
+
+	00000010 <write>:/*The low level system call write to print to screen from library */
+	10:	04000893          	li	a7,64
+	14:	00000073          	ecall
+	18:	00008067          	ret
+
+	0000001c <sin_taylor>: /*The sin_taylor function compiled from C code above */
+	1c:	38002707          	flw	fa4,896(zero) # 380 <fputs+0x58>
+	20:	f00006d3          	fmv.w.x	fa3,zero
+	24:	fff00613          	li	a2,-1
+	28:	18e577d3          	fdiv.s	fa5,fa0,fa4
+	2c:	c00797d3          	fcvt.w.s	a5,fa5,rtz
+	30:	d007f7d3          	fcvt.s.w	fa5,a5
+	34:	50e7f54b          	fnmsub.s	fa0,fa5,fa4,fa0
+	38:	a0d517d3          	flt.s	a5,fa0,fa3
+	3c:	00078663          	beqz	a5,48 <sin_taylor+0x2c>
+	40:	20a51553          	fneg.s	fa0,fa0
+	44:	00100613          	li	a2,1
+	48:	38402607          	flw	fa2,900(zero) # 384 <fputs+0x5c>
+	4c:	38802007          	flw	ft0,904(zero) # 388 <fputs+0x60>
+	50:	20a506d3          	fmv.s	fa3,fa0
+	54:	20a507d3          	fmv.s	fa5,fa0
+	58:	20a515d3          	fneg.s	fa1,fa0
+	5c:	00300693          	li	a3,3
+	60:	00100713          	li	a4,1
+	64:	0280006f          	j	8c <sin_taylor+0x70>
+	68:	02e687b3          	mul	a5,a3,a4
+	6c:	10a5f753          	fmul.s	fa4,fa1,fa0
+	70:	00268693          	addi	a3,a3,2
+	74:	00170713          	addi	a4,a4,1
+	78:	10f777d3          	fmul.s	fa5,fa4,fa5
+	7c:	00179793          	slli	a5,a5,0x1
+	80:	d007f753          	fcvt.s.w	fa4,a5
+	84:	18e7f7d3          	fdiv.s	fa5,fa5,fa4
+	88:	00f6f6d3          	fadd.s	fa3,fa3,fa5
+	8c:	a0f617d3          	flt.s	a5,fa2,fa5
+	90:	fc079ce3          	bnez	a5,68 <sin_taylor+0x4c>
+	94:	a00797d3          	flt.s	a5,fa5,ft0
+	98:	fc0798e3          	bnez	a5,68 <sin_taylor+0x4c>
+	9c:	d0067553          	fcvt.s.w	fa0,a2
+	a0:	10d57553          	fmul.s	fa0,fa0,fa3
+	a4:	00008067          	ret
+
+	000000a8 <main>:	/*The main function from C code above */
+	a8:	38c02507          	flw	fa0,908(zero) # 38c <fputs+0x64>
+	ac:	ef010113          	addi	sp,sp,-272
+	b0:	10112623          	sw	ra,268(sp)
+	b4:	f69ff0ef          	jal	1c <sin_taylor>
+	b8:	00010513          	mv	a0,sp
+	bc:	10000593          	li	a1,256
+	c0:	0ec000ef          	jal	1ac <ftoa>
+	c4:	00100593          	li	a1,1
+	c8:	35400513          	li	a0,852
+	cc:	25c000ef          	jal	328 <fputs>
+	d0:	00010513          	mv	a0,sp
+	d4:	200000ef          	jal	2d4 <puts>
+	d8:	39002507          	flw	fa0,912(zero) # 390 <fputs+0x68>
+	dc:	f41ff0ef          	jal	1c <sin_taylor>
+	e0:	00010513          	mv	a0,sp
+	e4:	10000593          	li	a1,256
+	e8:	0c4000ef          	jal	1ac <ftoa>
+	ec:	36c00513          	li	a0,876
+	f0:	00100593          	li	a1,1
+	f4:	234000ef          	jal	328 <fputs>
+	f8:	00010513          	mv	a0,sp
+	fc:	1d8000ef          	jal	2d4 <puts>
+	100:	10c12083          	lw	ra,268(sp)
+	104:	00000513          	li	a0,0
+	108:	11010113          	addi	sp,sp,272
+	10c:	00008067          	ret
+
+	00000110 <itoa>: /* The integer to string conversion function from library */
+	110:	00000313          	li	t1,0
+	114:	00055663          	bgez	a0,120 <itoa+0x10>
+	118:	40a00533          	neg	a0,a0
+	11c:	00100313          	li	t1,1
+	120:	00000793          	li	a5,0
+	124:	39800813          	li	a6,920
+	128:	00078893          	mv	a7,a5
+	12c:	00178793          	addi	a5,a5,1
+	130:	00f586b3          	add	a3,a1,a5
+	134:	02c57733          	remu	a4,a0,a2
+	138:	00e80733          	add	a4,a6,a4
+	13c:	00074703          	lbu	a4,0(a4)
+	140:	fee68fa3          	sb	a4,-1(a3)
+	144:	02c55533          	divu	a0,a0,a2
+	148:	fea040e3          	bgtz	a0,128 <itoa+0x18>
+	14c:	00030863          	beqz	t1,15c <itoa+0x4c>
+	150:	00288793          	addi	a5,a7,2
+	154:	02d00713          	li	a4,45
+	158:	00e68023          	sb	a4,0(a3)
+	15c:	00078513          	mv	a0,a5
+	160:	00f58733          	add	a4,a1,a5
+	164:	00070023          	sb	zero,0(a4)
+	168:	00100713          	li	a4,1
+	16c:	02f75e63          	bge	a4,a5,1a8 <itoa+0x98>
+	170:	00058693          	mv	a3,a1
+	174:	fff58593          	addi	a1,a1,-1
+	178:	00f587b3          	add	a5,a1,a5
+	17c:	00000713          	li	a4,0
+	180:	fff50513          	addi	a0,a0,-1
+	184:	0006c603          	lbu	a2,0(a3)
+	188:	0007c583          	lbu	a1,0(a5)
+	18c:	00b68023          	sb	a1,0(a3)
+	190:	00c78023          	sb	a2,0(a5)
+	194:	00170713          	addi	a4,a4,1
+	198:	00168693          	addi	a3,a3,1
+	19c:	fff78793          	addi	a5,a5,-1
+	1a0:	40e50633          	sub	a2,a0,a4
+	1a4:	fec740e3          	blt	a4,a2,184 <itoa+0x74>
+	1a8:	00008067          	ret
+
+	000001ac <ftoa>: /* The float to string conversion function from library */
+	1ac:	f00007d3          	fmv.w.x	fa5,zero
+	1b0:	fd010113          	addi	sp,sp,-48
+	1b4:	02812423          	sw	s0,40(sp)
+	1b8:	a0f517d3          	flt.s	a5,fa0,fa5
+	1bc:	02912223          	sw	s1,36(sp)
+	1c0:	00812e27          	fsw	fs0,28(sp)
+	1c4:	02112623          	sw	ra,44(sp)
+	1c8:	00058493          	mv	s1,a1
+	1cc:	20a50453          	fmv.s	fs0,fa0
+	1d0:	00050413          	mv	s0,a0
+	1d4:	00050593          	mv	a1,a0
+	1d8:	00078a63          	beqz	a5,1ec <ftoa+0x40>
+	1dc:	20a51453          	fneg.s	fs0,fa0
+	1e0:	02d00793          	li	a5,45
+	1e4:	00f50023          	sb	a5,0(a0)
+	1e8:	00150593          	addi	a1,a0,1
+	1ec:	c0041553          	fcvt.w.s	a0,fs0,rtz
+	1f0:	00a00613          	li	a2,10
+	1f4:	00b12623          	sw	a1,12(sp)
+	1f8:	00a12423          	sw	a0,8(sp)
+	1fc:	f15ff0ef          	jal	110 <itoa>
+	200:	00c12583          	lw	a1,12(sp)
+	204:	00812503          	lw	a0,8(sp)
+	208:	0005c783          	lbu	a5,0(a1)
+	20c:	00078c63          	beqz	a5,224 <ftoa+0x78>
+	210:	00158793          	addi	a5,a1,1
+	214:	00078593          	mv	a1,a5
+	218:	0007c703          	lbu	a4,0(a5)
+	21c:	00178793          	addi	a5,a5,1
+	220:	fe071ae3          	bnez	a4,214 <ftoa+0x68>
+	224:	d0057753          	fcvt.s.w	fa4,a0
+	228:	f00007d3          	fmv.w.x	fa5,zero
+	22c:	02e00713          	li	a4,46
+	230:	08e47453          	fsub.s	fs0,fs0,fa4
+	234:	00e58023          	sb	a4,0(a1)
+	238:	fff48793          	addi	a5,s1,-1
+	23c:	00f40533          	add	a0,s0,a5
+	240:	00158793          	addi	a5,a1,1
+	244:	a0f42753          	feq.s	a4,fs0,fa5
+	248:	06071863          	bnez	a4,2b8 <ftoa+0x10c>
+	24c:	06a7f663          	bgeu	a5,a0,2b8 <ftoa+0x10c>
+	250:	39402707          	flw	fa4,916(zero) # 394 <fputs+0x6c>
+	254:	00258793          	addi	a5,a1,2
+	258:	10e47453          	fmul.s	fs0,fs0,fa4
+	25c:	c0041753          	fcvt.w.s	a4,fs0,rtz
+	260:	d00776d3          	fcvt.s.w	fa3,a4
+	264:	03070713          	addi	a4,a4,48
+	268:	00e580a3          	sb	a4,1(a1)
+	26c:	08d47453          	fsub.s	fs0,fs0,fa3
+	270:	04a7f463          	bgeu	a5,a0,2b8 <ftoa+0x10c>
+	274:	a0f42753          	feq.s	a4,fs0,fa5
+	278:	04071063          	bnez	a4,2b8 <ftoa+0x10c>
+	27c:	10e47453          	fmul.s	fs0,fs0,fa4
+	280:	00358793          	addi	a5,a1,3
+	284:	c0041753          	fcvt.w.s	a4,fs0,rtz
+	288:	d00776d3          	fcvt.s.w	fa3,a4
+	28c:	03070713          	addi	a4,a4,48
+	290:	00e58123          	sb	a4,2(a1)
+	294:	08d47453          	fsub.s	fs0,fs0,fa3
+	298:	02a7f063          	bgeu	a5,a0,2b8 <ftoa+0x10c>
+	29c:	a0f42753          	feq.s	a4,fs0,fa5
+	2a0:	00071c63          	bnez	a4,2b8 <ftoa+0x10c>
+	2a4:	10e47453          	fmul.s	fs0,fs0,fa4
+	2a8:	00458793          	addi	a5,a1,4
+	2ac:	c0041753          	fcvt.w.s	a4,fs0,rtz
+	2b0:	03070713          	addi	a4,a4,48
+	2b4:	00e581a3          	sb	a4,3(a1)
+	2b8:	00078023          	sb	zero,0(a5)
+	2bc:	02c12083          	lw	ra,44(sp)
+	2c0:	02812403          	lw	s0,40(sp)
+	2c4:	02412483          	lw	s1,36(sp)
+	2c8:	01c12407          	flw	fs0,28(sp)
+	2cc:	03010113          	addi	sp,sp,48
+	2d0:	00008067          	ret
+
+	000002d4 <puts>: /* Printing the string function from library */
+	2d4:	fe010113          	addi	sp,sp,-32
+	2d8:	00112e23          	sw	ra,28(sp)
+	2dc:	00054783          	lbu	a5,0(a0)
+	2e0:	00050593          	mv	a1,a0
+	2e4:	00000613          	li	a2,0
+	2e8:	00078a63          	beqz	a5,2fc <puts+0x28>
+	2ec:	00160613          	addi	a2,a2,1
+	2f0:	00c587b3          	add	a5,a1,a2
+	2f4:	0007c783          	lbu	a5,0(a5)
+	2f8:	fe079ae3          	bnez	a5,2ec <puts+0x18>
+	2fc:	00100513          	li	a0,1
+	300:	d11ff0ef          	jal	10 <write>
+	304:	00100613          	li	a2,1
+	308:	00a00793          	li	a5,10
+	30c:	00f10593          	addi	a1,sp,15
+	310:	00060513          	mv	a0,a2
+	314:	00f107a3          	sb	a5,15(sp)
+	318:	cf9ff0ef          	jal	10 <write>
+	31c:	01c12083          	lw	ra,28(sp)
+	320:	02010113          	addi	sp,sp,32
+	324:	00008067          	ret
+
+	00000328 <fputs>: /*Printing the string to file descriptor function from library */
+	328:	00054783          	lbu	a5,0(a0)
+	32c:	00050713          	mv	a4,a0
+	330:	00000613          	li	a2,0
+	334:	00058513          	mv	a0,a1
+	338:	00078a63          	beqz	a5,34c <fputs+0x24>
+	33c:	00160613          	addi	a2,a2,1
+	340:	00c707b3          	add	a5,a4,a2
+	344:	0007c783          	lbu	a5,0(a5)
+	348:	fe079ae3          	bnez	a5,33c <fputs+0x14>
+	34c:	00070593          	mv	a1,a4
+	350:	cc1ff06f          	j	10 <write>
+
+	00000354 <.rodata.str1.4>: /*Read only data */
+	354:	206e6953          	.insn	4, 0x206e6953
+	358:	332d                	.insn	2, 0x332d
+	35a:	2030                	.insn	2, 0x2030
+	35c:	6564                	.insn	2, 0x6564
+	35e:	65657267          	.insn	4, 0x65657267
+	362:	73692073          	csrs	mhpmevent22h,s2
+	366:	203a                	.insn	2, 0x203a
+	368:	0000                	.insn	2, 0x0000
+	36a:	0000                	.insn	2, 0x0000
+	36c:	206e6953          	.insn	4, 0x206e6953
+	370:	64203033          	.insn	4, 0x64203033
+	374:	6765                	.insn	2, 0x6765
+	376:	6572                	.insn	2, 0x6572
+	378:	7365                	.insn	2, 0x7365
+	37a:	6920                	.insn	2, 0x6920
+	37c:	00203a73          	csrrc	s4,frm,zero
+
+	00000380 <.srodata.cst4>: /**/
+	380:	40c90fdb          	.insn	4, 0x40c90fdb
+	384:	37bd                	.insn	2, 0x37bd
+	386:	3586                	.insn	2, 0x3586
+	388:	37bd                	.insn	2, 0x37bd
+	38a:	b586                	.insn	2, 0xb586
+	38c:	0a92                	.insn	2, 0x0a92
+	38e:	bf06                	.insn	2, 0xbf06
+	390:	0a92                	.insn	2, 0x0a92
+	392:	3f06                	.insn	2, 0x3f06
+	394:	0000                	.insn	2, 0x0000
+	396:	4120                	.insn	2, 0x4120
+
+	00000398 <digits.0>: /*Data from itoa function in library */
+	398:	3130                	.insn	2, 0x3130
+	39a:	3332                	.insn	2, 0x3332
+	39c:	3534                	.insn	2, 0x3534
+	39e:	3736                	.insn	2, 0x3736
+	3a0:	3938                	.insn	2, 0x3938
+	3a2:	4241                	.insn	2, 0x4241
+	3a4:	46454443          	.insn	4, 0x46454443
+	3a8:	4a494847          	.insn	4, 0x4a494847
+	3ac:	4e4d4c4b          	.insn	4, 0x4e4d4c4b
+	3b0:	5251504f          	.insn	4, 0x5251504f
+	3b4:	56555453          	.insn	4, 0x56555453
+	3b8:	5a595857          	.insn	4, 0x5a595857
+		...
+      #+end_src
+   3. Some important points to note:
+      - Program starts from address 0x0.
+      - Program always starts from ~_start~ function -- provided in
+        ~lib/asm/start.S~ file.
+      - The ~_start~ function sets up the stack pointer to 2048, the
+        last byte in the data and instruction shared memory address
+        space.
+      - The instruction and data memory size is provided in
+        ~src/includes/system.hpp~ file.
+      - Instruction and Data memory are set to 1KB each. If you change
+        these values in ~system.hpp~, change the stack pointer
+        initialization too in ~lib/asm/start.S~ file.
+   4. Now we can debug the program ~sin_taylor.bin~ using a debugging
+      session like so:
+      #+begin_src bash
+	./iss ./tests/sin_taylor.bin 	# Run the ISS with the bin file << user input
+	p: for printing registers
+	m: for printing memory
+	a: for adding breakpoints	# use a to add a breakpoint
+	l: for printing registered breakpoints
+	r: to run the program
+	s: to step to next instruction
+	q: to quit
+	a				# adding a break point <<user input command a
+	Add breakpoints as numbers in hex, e.g., fc # instruction how to add breakpoints (output from ISS)
+	q for quitting
+	1c				# adding breakpoint at 1c, entry of sin_taylor function <<user input 1c
+	q				# quiting the adding of breakpoint state in ISS <<user input q command
+	r				# running the program <<user input command r to run
+	# The instructions executed by ISS (output)
+	0:00001137			
+	4:80010113
+	8:0a0000ef
+	a8:38c02507
+	ac:ef010113
+	b0:10112623
+	b4:f69ff0ef			# ISS stops waiting at the breakpoint
+	p				# Print the registers <<user input command p
+	# Base 32-bit registers in RISCV (output)
+	x0: 00000000	ra: 000000b8	sp: 000006f0	gp: 00000000	x4: 00000000
+	t0: 00000000	t1: 00000000	t2: 00000000	s0: 00000000
+	x9: 00000000	a0: 00000000	a1: 00000000	a2: 00000000
+	a3: 00000000	a4: 00000000	a5: 00000000	a6: 00000000
+	a7: 00000000	s2: 00000000	s3: 00000000	s4: 00000000
+	s5: 00000000	s6: 00000000	s7: 00000000	s8: 00000000
+	s9: 00000000	sa: 00000000	sb: 00000000	t3: 00000000
+	t4: 00000000	t5: 00000000	t6: 00000000	PC = 0000001c # Program counter at 1c.
+	# 32-bit Single precision floating pointer registers in the RISCV (output)
+	ft0: 0	ft1: 0	ft2: 0	ft3: 0	ft4: 0
+	ft5: 0	ft6: 0	ft7: 0	fs0: 0
+	fs1: 0	fa0: -0.523599	fa1: 0	fa2: 0
+	fa3: 0	fa4: 0	fa5: 0	fa6: 0
+	fa7: 0	fs2: 0	fs3: 0	fs4: 0
+	fs5: 0	fs6: 0	fs7: 0	fs8: 0
+	fs9: 0	fsa: 0	fsb: 0	ft0: 0
+	ft1: 0	ft2: 0	ft3: 0
+	s 				# step 1 instruction at 1c <<user input s command to do 1 step
+	1c:38002707			# output by ISS stating instruction 1c has been executed
+	p				# <<user input p command to print registers
+	x0: 00000000	ra: 000000b8	sp: 000006f0	gp: 00000000	x4: 00000000
+	t0: 00000000	t1: 00000000	t2: 00000000	s0: 00000000
+	x9: 00000000	a0: 00000000	a1: 00000000	a2: 00000000
+	a3: 00000000	a4: 00000000	a5: 00000000	a6: 00000000
+	a7: 00000000	s2: 00000000	s3: 00000000	s4: 00000000
+	s5: 00000000	s6: 00000000	s7: 00000000	s8: 00000000
+	s9: 00000000	sa: 00000000	sb: 00000000	t3: 00000000
+	t4: 00000000	t5: 00000000	t6: 00000000	PC = 00000020 # Program counter now at next assembler instruction
+	ft0: 0	ft1: 0	ft2: 0	ft3: 0	ft4: 0
+	ft5: 0	ft6: 0	ft7: 0	fs0: 0
+	fs1: 0	fa0: -0.523599	fa1: 0	fa2: 0
+	fa3: 0	fa4: 6.28319	fa5: 0	fa6: 0
+	fa7: 0	fs2: 0	fs3: 0	fs4: 0
+	fs5: 0	fs6: 0	fs7: 0	fs8: 0
+	fs9: 0	fsa: 0	fsb: 0	ft0: 0
+	ft1: 0	ft2: 0	ft3: 0	
+      #+end_src
+   5. In the above ~<<user input~ specifies the input given by the user
+   6. In the above ~(output)~ by the ISS is marked explicitly.
+   7. One can add a breakpoint anytime when the ISS has halted and rerun
+      using ~s~ or ~r~ commands.
+   8. One can even list the breakpoints using ~l~ command to ISS
+
+
+* Project structure:
+  1. Folder ~src~ has the ISS simulator in C++-17.
+  2. Folder ~lib~ has a minimal library supporting printing, string
+     manipulation, etc for the RISCV programs.
+  3. Folder ~tests~ has example test programs.
+
+* TODO
+  1. Reverse debugging
+  2. Implementing the vector instruction set
+  3. Implementing Control and Status Register (CSR) instructions
