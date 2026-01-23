@@ -15,7 +15,6 @@ struct Decode {
               << "\n";
     std::cerr << "Termination occurred at " << __FILE__ << ":" << __LINE__
               << std::endl;
-    std::abort();
   }
 
   // Custom ctor
