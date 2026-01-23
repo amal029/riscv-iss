@@ -536,7 +536,7 @@ in ~tests~ folder.
      manipulation, etc for the RISCV programs.
   3. Folder ~tests~ has example test programs.
 
-* TODO
+* Things TODO
   1. Reverse debugging
   2. Implementing the vector instruction set
   3. Implementing Control and Status Register (CSR) instructions
