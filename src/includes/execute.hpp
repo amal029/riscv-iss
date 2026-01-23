@@ -804,7 +804,9 @@ struct Execute {
   void setPC_Change() { *PC_Change = false; }
   bool getPC_Change() const { return *PC_Change; }
   void setRegFile(uint8_t index, int value) {
-    std::memset(REGFILE + index, value, WORD);
+    // This is called before executing every instruction setting the x0
+    // register to 0.
+    REGFILE[index] = static_cast<word_t>(value);
   }
 
 private:
