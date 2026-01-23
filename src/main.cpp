@@ -7,9 +7,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -137,7 +139,14 @@ void add_break_points(std::vector<size_t> &breaks) {
     if (in == "q") {
       break;
     } else {
-      breaks.emplace_back(std::stoull(in, nullptr, 16));
+      try {
+        breaks.emplace_back(std::stoull(in, nullptr, 16));
+        std::cout << "added breakpoint: " << in << "\n";
+      } catch (std::invalid_argument) {
+        std::cerr << "Cannot parse input, try again\n";
+        std::cerr << "Add breakpoints as numbers in hex, e.g., fc\n";
+        std::cerr << "q for quitting\n";
+      }
     }
   }
 }
