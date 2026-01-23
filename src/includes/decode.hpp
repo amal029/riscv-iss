@@ -10,11 +10,10 @@
 struct Decode {
 
   // Error output
-  static void error(uint32_t inst) {
+  static void error(std::string f, size_t l, uint32_t inst) {
     std::cerr << "Cannot decode the instruction: " << std::bitset<32>{inst}
               << "\n";
-    std::cerr << "Termination occurred at " << __FILE__ << ":" << __LINE__
-              << std::endl;
+    std::cerr << "Termination occurred at " << f << ":" << l << "\n";
   }
 
   // Custom ctor
@@ -93,7 +92,7 @@ struct Decode {
       ret.frindex = decodeFloatR(inst);
       break;
     default:
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
     return ret;
@@ -104,7 +103,7 @@ struct Decode {
     if (func3 == 0b010) {
       return Float_IIndex::FLW;
     } else {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -142,7 +141,7 @@ struct Decode {
       else if (func3 == FExtension_Funct3::FSGNJX_S_Funct3)
         return Float_RIndex::FSGNJX_S;
       else {
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
       break;
@@ -158,7 +157,7 @@ struct Decode {
         break;
       }
       default: {
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
       }
@@ -172,7 +171,7 @@ struct Decode {
       case 0x1:
         return Float_RIndex::FCVT_WU_S;
       default:
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
       break;
@@ -183,7 +182,7 @@ struct Decode {
         if (rs2 == 0) {
           return Float_RIndex::FMV_X_W;
         } else {
-          error(inst);
+          error(__FILE__, __LINE__, inst);
           std::abort();
         }
       } else if (func3 == FExtension_Funct3::FCLASS_S_Funct3) {
@@ -191,11 +190,11 @@ struct Decode {
         if (rs2 == 0b001) {
           return Float_RIndex::FCLASS_S;
         } else {
-          error(inst);
+          error(__FILE__, __LINE__, inst);
           std::abort();
         }
       } else {
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
       break;
@@ -209,7 +208,7 @@ struct Decode {
       case FExtension_Funct3::FLE_S_Funct3:
         return Float_RIndex::FLE_S;
       default:
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
     }
@@ -220,7 +219,7 @@ struct Decode {
       } else if (rs2 == 0b00001) {
         return Float_RIndex::FCVT_S_WU;
       } else {
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
     }
@@ -229,12 +228,12 @@ struct Decode {
       if (func3 == FExtension_Funct3::FMV_W_X_Funct3 && rs2 == 0) {
         return Float_RIndex::FMV_W_X;
       } else {
-        error(inst);
+        error(__FILE__, __LINE__, inst);
         std::abort();
       }
     }
     default: {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
     }
@@ -245,7 +244,7 @@ struct Decode {
     if (func3 == 0b010) {
       return Float_SIndex::FSW;
     } else {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -296,7 +295,7 @@ struct Decode {
                func7 == R_FUNC7::OP_F7_MUL_DIV) {
       return RFuncIndex::REMU;
     } else {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -316,7 +315,7 @@ struct Decode {
     case B_FUNC3::OP_F3_BGEU:
       return BFuncIndex::BGEU;
     default:
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -330,7 +329,7 @@ struct Decode {
     case S_FUNC3::OP_S_W:
       return SFuncIndex::SW;
     default:
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -348,7 +347,7 @@ struct Decode {
     case ILOAD_FUNC3::OP_F3_HU:
       return IFuncIndex::LHU;
     default:
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -357,7 +356,7 @@ struct Decode {
     if (func3 == IJ_FUNC3::OP_F3_JALR)
       return IFuncIndex::JALR;
     else {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -385,7 +384,7 @@ struct Decode {
     else if (func3 == RI_FUNC3::OP_F3_SLTU)
       return IFuncIndex::SLTIU;
     else {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
@@ -396,10 +395,10 @@ struct Decode {
     if (func3 == IE_FUNC3::OP_F3_ECALL && imm == 0x0)
       return IFuncIndex::ECALL;
     else if (func3 == IE_FUNC3::OP_F3_EBREAK && imm == 0x1) {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     } else {
-      error(inst);
+      error(__FILE__, __LINE__, inst);
       std::abort();
     }
   }
