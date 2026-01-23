@@ -113,6 +113,7 @@ struct RFuncs {
                                    uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
+    assert(reg[rs2] > 0);
     reg[rd] = reg[rs1] / reg[rs2];
   }
 
@@ -121,6 +122,7 @@ struct RFuncs {
                                     uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
+    assert((uword_t)reg[rs2] > 0);
     reg[rd] = (uword_t)reg[rs1] / (uword_t)reg[rs2];
   }
 
@@ -129,6 +131,7 @@ struct RFuncs {
                                    uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
+    assert((uword_t)reg[rs2] > 0);
     reg[rd] = reg[rs1] % reg[rs2];
   }
 
@@ -137,6 +140,7 @@ struct RFuncs {
                                     uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
     // XXX: Check that this is what the semantics are?
+    assert((uword_t)reg[rs2] > 0);
     reg[rd] = (uword_t)reg[rs1] % (uword_t)reg[rs2];
   }
 };

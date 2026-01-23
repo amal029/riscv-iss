@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
-#include <exception>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -15,6 +14,8 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+
+#define IS_LITTLE_ENDIAN ((*(const char *)&(const int){1}) == 1)
 
 struct Config {
   constexpr static size_t KB = 1024;
@@ -32,7 +33,7 @@ void print_byte(uint8_t x) {
 
 void print_fregisters(fword_t *regs) {
   for (size_t i = 0; i < REGS; ++i) {
-    if (i >= 0 && i <= 7) {
+    if (i <= 7) {
       std::cout << "ft" << i << ": " << (float)regs[i];
     } else if (i >= 8 && i <= 9) {
       std::cout << "fs" << (i - 8) << ": " << (float)regs[i];
@@ -142,7 +143,7 @@ void add_break_points(std::vector<size_t> &breaks) {
       try {
         breaks.emplace_back(std::stoull(in, nullptr, 16));
         std::cout << "added breakpoint: " << in << "\n";
-      } catch (std::invalid_argument) {
+      } catch (std::invalid_argument &) {
         std::cerr << "Cannot parse input, try again\n";
         std::cerr << "Add breakpoints as numbers in hex, e.g., fc\n";
         std::cerr << "q for quitting\n";
@@ -152,6 +153,9 @@ void add_break_points(std::vector<size_t> &breaks) {
 }
 
 int main(int argc, char **argv) {
+#ifndef IS_LITTLE_ENDIAN
+  static_assert(false, "Only Little Endian architecture supported");
+#endif  
   std::vector<uint8_t> file;
   if (argc < 2) {
     std::cout << "Please run the program with ./iss <file-name>.bin\n";
