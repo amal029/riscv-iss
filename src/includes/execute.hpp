@@ -171,7 +171,7 @@ struct IFuncs {
   constexpr static void XORI(word_t *reg, uint8_t rd, uint8_t rs1,
                              uint8_t *DMEM, word_t imm, size_t *PC,
                              bool *PC_Change) {
-    reg[rd] = reg[rs1] | imm;
+    reg[rd] = reg[rs1] ^ imm;
   }
 
   [[gnu::always_inline]]
@@ -206,7 +206,7 @@ struct IFuncs {
   constexpr static void SLTI(word_t *reg, uint8_t rd, uint8_t rs1,
                              uint8_t *DMEM, word_t imm, size_t *PC,
                              bool *PC_Change) {
-    reg[rd] = rs1 < imm ? 1 : 0;
+    reg[rd] = reg[rs1] < imm ? 1 : 0;
   }
 
   [[gnu::always_inline]]
@@ -286,6 +286,7 @@ struct IFuncs {
       write(fd, DMEM + address, len);
       break;
     case SYS_EXIT:
+      exit((int)reg[10]);
       break;
     case SYS_READ:
       fd = reg[10];

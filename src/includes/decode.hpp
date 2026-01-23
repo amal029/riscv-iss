@@ -255,7 +255,7 @@ struct Decode {
     } else {
       std::cout << "Cannot decode the Float S-type instruction: "
                 << std::bitset<32>{inst} << "\n";
-      exit(1);
+      assert(false);
     }
   }
 
@@ -308,7 +308,7 @@ struct Decode {
     } else {
       std::cout << "Cannot decode R-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
   constexpr static BFuncIndex decodeB(uint32_t inst) {
@@ -329,7 +329,7 @@ struct Decode {
     default:
       std::cout << "Cannot decode B-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
   static SFuncIndex decodeS(uint32_t inst) {
@@ -347,7 +347,7 @@ struct Decode {
     default:
       std::cout << "Cannot decode S-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
   static IFuncIndex decodeILoad(uint32_t inst) {
@@ -366,7 +366,7 @@ struct Decode {
     default:
       std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
   static IFuncIndex decodeIJump(uint32_t inst) {
@@ -376,7 +376,7 @@ struct Decode {
     else {
       std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
   static IFuncIndex decodeIMath(uint32_t inst) {
@@ -405,7 +405,7 @@ struct Decode {
     else {
       std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
   static IFuncIndex decodeICall(uint32_t inst) {
@@ -420,7 +420,7 @@ struct Decode {
     } else {
       std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
                 << "\n";
-      exit(1);
+      assert(false);
     }
   }
 };
