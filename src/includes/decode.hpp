@@ -99,7 +99,7 @@ struct Decode {
     return ret;
   }
 
-  constexpr static Float_IIndex decodeFloatI(uint32_t inst) {
+  static Float_IIndex decodeFloatI(uint32_t inst) {
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     if (func3 == 0b010) {
       return Float_IIndex::FLW;
@@ -109,10 +109,7 @@ struct Decode {
     }
   }
 
-  constexpr static Float_RIndex decodeFloatR(uint32_t inst) {
-#ifdef DEBUG
-    std::cout << std::bitset<32>{inst} << "\n";
-#endif
+  static Float_RIndex decodeFloatR(uint32_t inst) {
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     uint8_t func7 = inst >> INST_BIT_SHIFT::FUNCT7_SHIFT & Masks::FUNC7_MASK;
     switch (func7) {
@@ -168,9 +165,6 @@ struct Decode {
       break;
     }
     case FExtension_Funct7::FCVT_W_S_Funct7: {
-#ifdef DEBUG
-      std::cout << "FCVT_W_S_Func7 instruction\n";
-#endif
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
       switch (rs2) {
       case 0x0:
@@ -246,7 +240,7 @@ struct Decode {
     }
   }
 
-  constexpr static Float_SIndex decodeFloatS(uint32_t inst) {
+  static Float_SIndex decodeFloatS(uint32_t inst) {
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     if (func3 == 0b010) {
       return Float_SIndex::FSW;
@@ -256,8 +250,7 @@ struct Decode {
     }
   }
 
-  // TODO: Fill these in correctly to complete the decoder.
-  constexpr static RFuncIndex decodeR(uint32_t inst) {
+  static RFuncIndex decodeR(uint32_t inst) {
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     uint8_t func7 = inst >> INST_BIT_SHIFT::FUNCT7_SHIFT & Masks::FUNC7_MASK;
     // Now the mux for decoding the instruction
@@ -307,7 +300,7 @@ struct Decode {
       std::abort();
     }
   }
-  constexpr static BFuncIndex decodeB(uint32_t inst) {
+  static BFuncIndex decodeB(uint32_t inst) {
     uint8_t func3 = inst >> INST_BIT_SHIFT::FUNCT3_SHIFT & Masks::FUNC3_MASK;
     switch (func3) {
     case B_FUNC3::OP_F3_BEQ:
@@ -335,9 +328,6 @@ struct Decode {
     case S_FUNC3::OP_S_H:
       return SFuncIndex::SH;
     case S_FUNC3::OP_S_W:
-#ifdef DEBUG
-      std::cout << "Performing STORE WORD\n";
-#endif
       return SFuncIndex::SW;
     default:
       error(inst);
