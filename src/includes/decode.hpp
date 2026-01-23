@@ -10,6 +10,12 @@
 struct Decode {
   // This class decodes the instructions
 
+  // Error output
+  static void error(uint32_t inst) {
+    std::cerr << "Cannot decode the instruction: " << std::bitset<32>{inst}
+              << "\n";
+  }
+
   Decode() = delete;
   // First we check the top level decode bits
   static Type_Index decode(uint32_t inst) {
@@ -84,8 +90,7 @@ struct Decode {
       ret.frindex = decodeFloatR(inst);
       break;
     default:
-      std::cout << "Cannot decode the instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
     return ret;
@@ -96,8 +101,7 @@ struct Decode {
     if (func3 == 0b010) {
       return Float_IIndex::FLW;
     } else {
-      std::cout << "Cannot decode the Float I-type instruction: "
-                << std::bitset<32>{inst} << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -138,8 +142,7 @@ struct Decode {
       else if (func3 == FExtension_Funct3::FSGNJX_S_Funct3)
         return Float_RIndex::FSGNJX_S;
       else {
-        std::cout << "Cannot decode instruction: " << std::bitset<32>{inst}
-                  << "\n";
+	error(inst);
         assert(false);
       }
       break;
@@ -155,8 +158,7 @@ struct Decode {
         break;
       }
       default: {
-        std::cout << "Cannot decode Float R-type the instruction: "
-                  << std::bitset<32>{inst} << "\n";
+	error(inst);
         assert(false);
       }
       }
@@ -173,8 +175,7 @@ struct Decode {
       case 0x1:
         return Float_RIndex::FCVT_WU_S;
       default:
-        std::cout << "Cannot decode Float R-type the instruction: "
-                  << std::bitset<32>{inst} << "\n";
+	error(inst);
         assert(false);
       }
       break;
@@ -185,8 +186,7 @@ struct Decode {
         if (rs2 == 0) {
           return Float_RIndex::FMV_X_W;
         } else {
-          std::cout << "Cannot decode Float R-type the instruction: "
-                    << std::bitset<32>{inst} << "\n";
+	  error(inst);
           assert(false);
         }
       } else if (func3 == FExtension_Funct3::FCLASS_S_Funct3) {
@@ -194,13 +194,11 @@ struct Decode {
         if (rs2 == 0b001) {
           return Float_RIndex::FCLASS_S;
         } else {
-          std::cout << "Cannot decode Float R-type the instruction: "
-                    << std::bitset<32>{inst} << "\n";
+	  error(inst);
           assert(false);
         }
       } else {
-        std::cout << "Cannot decode Float R-type the instruction: "
-                  << std::bitset<32>{inst} << "\n";
+	error(inst);
         assert(false);
         }
     }
@@ -213,8 +211,7 @@ struct Decode {
       case FExtension_Funct3::FLE_S_Funct3:
         return Float_RIndex::FLE_S;
       default:
-        std::cout << "Cannot decode Float R-type the instruction: "
-                  << std::bitset<32>{inst} << "\n";
+	error(inst);
         assert(false);
       }
     }
@@ -225,8 +222,7 @@ struct Decode {
       } else if (rs2 == 0b00001) {
         return Float_RIndex::FCVT_S_WU;
       } else {
-        std::cout << "Cannot decode Float R-type the instruction: "
-                  << std::bitset<32>{inst} << "\n";
+        error(inst);
         assert(false);
       }
     }
@@ -235,14 +231,12 @@ struct Decode {
       if (func3 == FExtension_Funct3::FMV_W_X_Funct3 && rs2 == 0) {
         return Float_RIndex::FMV_W_X;
       } else {
-        std::cout << "Cannot decode Float R-type the instruction: "
-                  << std::bitset<32>{inst} << "\n";
+	error(inst);
         assert(false);
       }
     }
     default: {
-      std::cout << "Cannot decode Float R-type the instruction: "
-                << std::bitset<32>{inst} << "\n";
+      error(inst);
       assert(false);
     }
     }
@@ -253,8 +247,7 @@ struct Decode {
     if (func3 == 0b010) {
       return Float_SIndex::FSW;
     } else {
-      std::cout << "Cannot decode the Float S-type instruction: "
-                << std::bitset<32>{inst} << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -306,8 +299,7 @@ struct Decode {
                func7 == R_FUNC7::OP_F7_MUL_DIV) {
       return RFuncIndex::REMU;
     } else {
-      std::cout << "Cannot decode R-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -327,8 +319,7 @@ struct Decode {
     case B_FUNC3::OP_F3_BGEU:
       return BFuncIndex::BGEU;
     default:
-      std::cout << "Cannot decode B-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -345,8 +336,7 @@ struct Decode {
 #endif
       return SFuncIndex::SW;
     default:
-      std::cout << "Cannot decode S-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -364,8 +354,7 @@ struct Decode {
     case ILOAD_FUNC3::OP_F3_HU:
       return IFuncIndex::LHU;
     default:
-      std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -374,8 +363,7 @@ struct Decode {
     if (func3 == IJ_FUNC3::OP_F3_JALR)
       return IFuncIndex::JALR;
     else {
-      std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -403,8 +391,7 @@ struct Decode {
     else if (func3 == RI_FUNC3::OP_F3_SLTU)
       return IFuncIndex::SLTIU;
     else {
-      std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }
@@ -415,11 +402,10 @@ struct Decode {
     if (func3 == IE_FUNC3::OP_F3_ECALL && imm == 0x0)
       return IFuncIndex::ECALL;
     else if (func3 == IE_FUNC3::OP_F3_EBREAK && imm == 0x1) {
-      std::cout << "No support for EBREAK yet!\n";
+      error(inst);
       assert(false);
     } else {
-      std::cout << "Cannot decode I-type instruction: " << std::bitset<32>{inst}
-                << "\n";
+      error(inst);
       assert(false);
     }
   }

@@ -4,14 +4,13 @@
 #include "bits.hpp"
 #include "system.hpp"
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-// #include <iostream>
 #include <iostream>
-#include <string.h>
 #include <unistd.h>
 
 // The R-type functions
@@ -809,9 +808,8 @@ struct Execute {
       break;
     }
     case ITYPES::FloatCSR: {
-      std::cout << "Float CSR instructions not yet implemented\n";
-      exit(1);
-      break;
+      std::cerr << "Float CSR instructions not yet implemented\n";
+      assert(false);
     }
     }
   }
