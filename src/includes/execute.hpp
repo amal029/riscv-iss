@@ -112,37 +112,110 @@ struct RFuncs {
   static inline constexpr void DIV(word_t *reg, uint8_t rd, uint8_t rs1,
                                    uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-    // XXX: Check that this is what the semantics are?
-    assert(reg[rs2] > 0);
-    reg[rd] = reg[rs1] / reg[rs2];
+    word_t dividend = static_cast<word_t>(reg[rs1]);
+    word_t divisor = static_cast<word_t>(reg[rs2]);
+
+    // RISC-V semantics:
+    // - divisor == 0  -> result = -1
+    // - INT_MIN / -1  -> result = INT_MIN (overflow case handled as per spec)
+    // - otherwise normal signed division
+    if (divisor == 0) {
+      reg[rd] = static_cast<word_t>(-1);
+    } else if (dividend == std::numeric_limits<word_t>::min() &&
+               divisor == -1) {
+      reg[rd] = static_cast<word_t>(dividend);
+    } else {
+      reg[rd] = static_cast<word_t>(dividend / divisor);
+    }
   }
 
   [[gnu::always_inline]]
   static inline constexpr void DIVU(word_t *reg, uint8_t rd, uint8_t rs1,
                                     uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-    // XXX: Check that this is what the semantics are?
-    assert((uword_t)reg[rs2] > 0);
-    reg[rd] = (uword_t)reg[rs1] / (uword_t)reg[rs2];
+    uword_t dividend = static_cast<uword_t>(reg[rs1]);
+    uword_t divisor = static_cast<uword_t>(reg[rs2]);
+
+    // RISC-V semantics:
+    // - divisor == 0 -> result = all-ones (UINT32_MAX)
+    if (divisor == 0) {
+      reg[rd] = static_cast<word_t>(std::numeric_limits<uword_t>::max());
+    } else {
+      reg[rd] = static_cast<word_t>(dividend / divisor);
+    }
   }
 
   [[gnu::always_inline]]
   static inline constexpr void REM(word_t *reg, uint8_t rd, uint8_t rs1,
                                    uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-    // XXX: Check that this is what the semantics are?
-    assert((uword_t)reg[rs2] > 0);
-    reg[rd] = reg[rs1] % reg[rs2];
+    word_t dividend = static_cast<word_t>(reg[rs1]);
+    word_t divisor = static_cast<word_t>(reg[rs2]);
+
+    // RISC-V semantics:
+    // - divisor == 0 -> result = dividend
+    // - INT_MIN % -1 -> result = 0
+    if (divisor == 0) {
+      reg[rd] = static_cast<word_t>(dividend);
+    } else if (dividend == std::numeric_limits<word_t>::min() &&
+               divisor == -1) {
+      reg[rd] = static_cast<word_t>(0);
+    } else {
+      reg[rd] = static_cast<word_t>(dividend % divisor);
+    }
   }
 
   [[gnu::always_inline]]
   static inline constexpr void REMU(word_t *reg, uint8_t rd, uint8_t rs1,
                                     uint8_t rs2) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-    // XXX: Check that this is what the semantics are?
-    assert((uword_t)reg[rs2] > 0);
-    reg[rd] = (uword_t)reg[rs1] % (uword_t)reg[rs2];
+    uword_t dividend = static_cast<uword_t>(reg[rs1]);
+    uword_t divisor = static_cast<uword_t>(reg[rs2]);
+
+    // RISC-V semantics:
+    // - divisor == 0 -> result = dividend (unsigned)
+    if (divisor == 0) {
+      reg[rd] = static_cast<word_t>(dividend);
+    } else {
+      reg[rd] = static_cast<word_t>(dividend % divisor);
+    }
   }
+
+  // [[gnu::always_inline]]
+  // static inline constexpr void DIV(word_t *reg, uint8_t rd, uint8_t rs1,
+  //                                  uint8_t rs2) {
+  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+  //   // XXX: Check that this is what the semantics are?
+  //   assert(reg[rs2] > 0);
+  //   reg[rd] = reg[rs1] / reg[rs2];
+  // }
+
+  // [[gnu::always_inline]]
+  // static inline constexpr void DIVU(word_t *reg, uint8_t rd, uint8_t rs1,
+  //                                   uint8_t rs2) {
+  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+  //   // XXX: Check that this is what the semantics are?
+  //   assert((uword_t)reg[rs2] > 0);
+  //   reg[rd] = (uword_t)reg[rs1] / (uword_t)reg[rs2];
+  // }
+
+  // [[gnu::always_inline]]
+  // static inline constexpr void REM(word_t *reg, uint8_t rd, uint8_t rs1,
+  //                                  uint8_t rs2) {
+  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+  //   // XXX: Check that this is what the semantics are?
+  //   assert((uword_t)reg[rs2] > 0);
+  //   reg[rd] = reg[rs1] % reg[rs2];
+  // }
+
+  // [[gnu::always_inline]]
+  // static inline constexpr void REMU(word_t *reg, uint8_t rd, uint8_t rs1,
+  //                                   uint8_t rs2) {
+  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+  //   // XXX: Check that this is what the semantics are?
+  //   assert((uword_t)reg[rs2] > 0);
+  //   reg[rd] = (uword_t)reg[rs1] % (uword_t)reg[rs2];
+  // }
 };
 
 struct IFuncs {
