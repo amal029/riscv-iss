@@ -124,7 +124,7 @@ struct Decode {
       return Float_RIndex::FMUL_S;
       break;
     }
-    case FExtension_Funct7::FDIV_S_funct7: {
+    case FExtension_Funct7::FDIV_S_Funct7: {
       return Float_RIndex::FDIV_S;
       break;
     }
@@ -133,7 +133,7 @@ struct Decode {
       break;
     }
       // XXX: The below case handles 3 different opcodes
-    case FExtension_Funct7::FSGNJ_S_funct7: {
+    case FExtension_Funct7::FSGNJ_S_Funct7: {
       if (func3 == FExtension_Funct3::FSGNJ_S_Funct3)
         return Float_RIndex::FSGNJ_S;
       else if (func3 == FExtension_Funct3::FSGNJN_S_Funct3)

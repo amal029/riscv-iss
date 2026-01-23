@@ -155,7 +155,7 @@ void add_break_points(std::vector<size_t> &breaks) {
 int main(int argc, char **argv) {
 #ifndef IS_LITTLE_ENDIAN
   static_assert(false, "Only Little Endian architecture supported");
-#endif  
+#endif
   std::vector<uint8_t> file;
   if (argc < 2) {
     std::cout << "Please run the program with ./iss <file-name>.bin\n";
@@ -220,7 +220,8 @@ int main(int argc, char **argv) {
     } else if (input == 'l') {
       // Print all the registered breakpoints
       for (size_t br : breaks) {
-        std::cout << std::hex << std::setfill('0') << std::setw(8) << br << ", \t";
+        std::cout << std::hex << std::setfill('0') << std::setw(8) << br
+                  << ", \t";
       }
       std::cout << "\n";
       std::cin >> input;

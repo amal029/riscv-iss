@@ -180,42 +180,6 @@ struct RFuncs {
       reg[rd] = static_cast<word_t>(dividend % divisor);
     }
   }
-
-  // [[gnu::always_inline]]
-  // static inline constexpr void DIV(word_t *reg, uint8_t rd, uint8_t rs1,
-  //                                  uint8_t rs2) {
-  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-  //   // XXX: Check that this is what the semantics are?
-  //   assert(reg[rs2] > 0);
-  //   reg[rd] = reg[rs1] / reg[rs2];
-  // }
-
-  // [[gnu::always_inline]]
-  // static inline constexpr void DIVU(word_t *reg, uint8_t rd, uint8_t rs1,
-  //                                   uint8_t rs2) {
-  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-  //   // XXX: Check that this is what the semantics are?
-  //   assert((uword_t)reg[rs2] > 0);
-  //   reg[rd] = (uword_t)reg[rs1] / (uword_t)reg[rs2];
-  // }
-
-  // [[gnu::always_inline]]
-  // static inline constexpr void REM(word_t *reg, uint8_t rd, uint8_t rs1,
-  //                                  uint8_t rs2) {
-  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-  //   // XXX: Check that this is what the semantics are?
-  //   assert((uword_t)reg[rs2] > 0);
-  //   reg[rd] = reg[rs1] % reg[rs2];
-  // }
-
-  // [[gnu::always_inline]]
-  // static inline constexpr void REMU(word_t *reg, uint8_t rd, uint8_t rs1,
-  //                                   uint8_t rs2) {
-  //   static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
-  //   // XXX: Check that this is what the semantics are?
-  //   assert((uword_t)reg[rs2] > 0);
-  //   reg[rd] = (uword_t)reg[rs1] % (uword_t)reg[rs2];
-  // }
 };
 
 struct IFuncs {
@@ -295,14 +259,12 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LW(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD);
   }
 
   [[gnu::always_inline]]
   static void LH(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
     // TODO: This will not work for 64-bit architecture
     // Sign extend the number
@@ -314,7 +276,6 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LB(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
     // Need to sign extend the number
     reg[rd] = ((reg[rd] >> 7) & 0x1) == 0x0
@@ -327,7 +288,6 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LBU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                   word_t imm, size_t *PC, bool *PC_Change) {
-    // bzero(reg + rd, WORD);	// because registers are being shared here!
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
     // After this set all higher bytes to zero
     reg[rd] &= (WORD == 4) ? 0x000000FF : 0x00000000000000FF;
@@ -337,7 +297,6 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LHU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                   word_t imm, size_t *PC, bool *PC_Change) {
-    // bzero(reg + rd, WORD);
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
     reg[rd] &= (WORD == 4) ? 0x0000FFFF : 0x00000000FFFFFFFF;
   }
@@ -356,9 +315,6 @@ struct IFuncs {
       fd = reg[10];
       address = reg[11];
       len = reg[12];
-#ifdef DEBUG
-      printf("%d,%x,%lu", fd, address, len);
-#endif
       write(fd, DMEM + address, len);
       break;
     case SYS_EXIT:
@@ -391,16 +347,8 @@ struct SFuncs {
   [[gnu::always_inline]]
   static void SW(word_t *reg, uint8_t rs1, uint8_t rs2, uint8_t *DMEM,
                  word_t imm) {
-#ifdef DEBUG
-    fprintf(stderr, "%d, %d, %x\n", imm, reg[rs1] + imm, reg[rs1] + imm);
-    fprintf(stderr, "%x\n", reg[rs2]);
-    fprintf(stderr, "%x\n", (word_t)DMEM[reg[rs1] + imm]);
-#endif
     // DMEM[reg[rs1] + imm] = (word_t)reg[rs2];
     std::memcpy(DMEM + reg[rs1] + imm, reg + rs2, WORD);
-#ifdef DEBUG
-    fprintf(stderr, "%x\n", (word_t)DMEM[reg[rs1] + imm]);
-#endif
   }
 };
 
@@ -408,9 +356,6 @@ struct UFuncs {
 
   [[gnu::always_inline]]
   static void LUI(word_t *reg, uint8_t rd, size_t PC, word_t imm) {
-#ifdef DEBUG
-    fprintf(stderr, "LUI: %d, %x\n", imm, imm);
-#endif
     reg[rd] = imm;
   }
 
@@ -446,19 +391,10 @@ struct BFuncs {
   [[gnu::always_inline]]
   static void BNE(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC, word_t imm,
                   bool *PC_Change) {
-#ifdef DEBUG
-    fprintf(stderr, "%x, %d\n", imm, imm);
-    fprintf(stderr, "PC = %zx\n", *PC);
-#endif
     if (reg[rs1] != reg[rs2]) {
       *PC = *PC + imm;
       *PC_Change = true;
     }
-    // *PC = reg[rs1] != reg[rs2] ? *PC += imm : *PC;
-    // *PC_Change = true;
-#ifdef DEBUG
-    fprintf(stderr, "BNE PC = %zx\n", *PC);
-#endif
   }
 
   [[gnu::always_inline]]
@@ -468,8 +404,6 @@ struct BFuncs {
       *PC += imm;
       *PC_Change = true;
     }
-    // *PC = reg[rs1] < reg[rs2] ? *PC += imm : *PC;
-    // *PC_Change = true;
   }
 
   [[gnu::always_inline]]
@@ -479,8 +413,6 @@ struct BFuncs {
       *PC += imm;
       *PC_Change = true;
     }
-    // *PC = reg[rs1] >= reg[rs2] ? *PC += imm : *PC;
-    // *PC_Change = true;
   }
 
   [[gnu::always_inline]]
@@ -490,8 +422,6 @@ struct BFuncs {
       *PC += imm;
       *PC_Change = true;
     }
-    // *PC = (uword_t)reg[rs1] < (uword_t)reg[rs2] ? *PC += imm : *PC;
-    // *PC_Change = true;
   }
 
   [[gnu::always_inline]]
@@ -501,8 +431,6 @@ struct BFuncs {
       *PC += imm;
       *PC_Change = true;
     }
-    // *PC = (uword_t)reg[rs1] >= (uword_t)reg[rs2] ? *PC += imm : *PC;
-    // *PC_Change = true;
   }
 };
 
@@ -581,23 +509,13 @@ struct FExtension {
   static void FSGNJ_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                       uint8_t rd) {
     int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
-#ifdef DEBUG
-    std::cout << "FSGNJ_S: " << freg[rs1]
-              << "abs value: " << std::abs(freg[rs1]) << "sgn: " << sgn << "\n";
-#endif
     freg[rd] = std::abs(freg[rs1]) * sgn;
-#ifdef DEBUG
-    std::cout << "FSGNJ_S result: " << freg[rd] << "\n";
-#endif
   }
 
   [[gnu::always_inline]]
   static void FSGNJN_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                        uint8_t rd) {
     int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
-#ifdef DEBUG
-    std::cout << "FSGNJN_S: " << std::abs(freg[rs1]) << "sgn: " << sgn << "\n";
-#endif
     freg[rd] = std::abs(freg[rs1]) * -sgn;
   }
 
@@ -635,10 +553,6 @@ struct FExtension {
   [[gnu::always_inline]]
   static void FCVT_W_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                        uint8_t rd) {
-#ifdef DEBUG
-    std::cout << (float)freg[rs1] << "\n";
-    std::cout << (word_t)freg[rs1] << "\n";
-#endif
     reg[rd] = (word_t)freg[rs1];
   }
 
@@ -664,18 +578,12 @@ struct FExtension {
   [[gnu::always_inline]]
   static void FEQ_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                     uint8_t rd) {
-#ifdef DEBUG
-    std::cout << "FEQ_S: " << (freg[rs1] == freg[rs2]);
-#endif
     reg[rd] = freg[rs1] == freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FLT_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
                     uint8_t rd) {
-#ifdef DEBUG
-    std::cout << "FLT_S: " << (freg[rs1] < freg[rs2]) << "\n";
-#endif
     reg[rd] = freg[rs1] < freg[rs2];
   }
 
@@ -782,14 +690,6 @@ struct Execute {
       word_t imm = imm1 | imm2 | imm3;
       // Now sign extend this immediate value
       imm = sign_extend_imm(inst, imm); // we can use this here
-#ifdef DEBUG
-      std::cerr << std::bitset<32>{(unsigned long long)imm1} << "\n";
-      std::cerr << std::bitset<32>{(unsigned long long)imm2} << "\n";
-      std::cerr << std::bitset<32>{(unsigned long long)imm3} << "\n";
-      fprintf(stderr, "%d, %d\n", rs1, rs2);
-      std::cerr << std::bitset<32>{(unsigned long long)inst} << "\n";
-      std::cerr << std::bitset<32>{(unsigned long long)imm} << "\n";
-#endif
       bops[tyi.bindex](REGFILE, rs1, rs2, PC, imm, PC_Change);
       break;
     }
@@ -814,19 +714,12 @@ struct Execute {
     case ITYPES::U: {
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       word_t imm = inst & (Masks::U_IMM_MASK << INST_BIT_SHIFT::U_IMM_SHIFT);
-#ifdef DEBUG
-      std::cout << "U-type immediate: " << (word_t)imm << "\n";
-#endif
       uops[tyi.uindex](REGFILE, rd, *PC, imm);
       break;
     }
     case ITYPES::S: {
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
-#ifdef DEBUG
-      std::cout << "rs2: " << (uint32_t)rs2 << " rs1: " << (uint32_t)rs1
-                << "\n";
-#endif
       // Now get the immediate value and sign extend it.
       word_t tmp1 =
           (inst >> INST_BIT_SHIFT::S_IMM_LOWER_SHIFT) & Masks::S_IMM_LOWER_MASK;
@@ -834,9 +727,6 @@ struct Execute {
           (inst >> INST_BIT_SHIFT::S_IMM_UPPER_SHIFT) & Masks::S_IMM_UPPER_MASK;
       word_t imm = tmp1 | (tmp2 << INST_BIT_SHIFT::S_IMM_UPPER_L_SHIFT);
       imm = sign_extend_imm(inst, imm);
-#ifdef DEBUG
-      std::cout << "S-type immediate value: " << (int32_t)imm << "\n";
-#endif
       sops[tyi.sindex](REGFILE, rs1, rs2, DMEM, imm);
       break;
     }
@@ -852,10 +742,6 @@ struct Execute {
     case ITYPES::FloatS: {
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
-#ifdef DEBUG
-      std::cout << "rs2: " << (uint32_t)rs2 << " rs1: " << (uint32_t)rs1
-                << "\n";
-#endif
       // Now get the immediate value and sign extend it.
       word_t tmp1 =
           (inst >> INST_BIT_SHIFT::S_IMM_LOWER_SHIFT) & Masks::S_IMM_LOWER_MASK;
@@ -863,9 +749,6 @@ struct Execute {
           (inst >> INST_BIT_SHIFT::S_IMM_UPPER_SHIFT) & Masks::S_IMM_UPPER_MASK;
       word_t imm = tmp1 | (tmp2 << INST_BIT_SHIFT::S_IMM_UPPER_L_SHIFT);
       imm = sign_extend_imm(inst, imm);
-#ifdef DEBUG
-      std::cout << "S-type immediate value: " << (int32_t)imm << "\n";
-#endif
       fsops[tyi.sindex](REGFILE_FLOAT, REGFILE, DMEM, rs1, rs2, imm);
       break;
     }
@@ -934,91 +817,62 @@ private:
   // XXX: This will only allow compiling with clang++ and g++ MSVC does
   // not support this array designated initialization.
   constexpr static ROperations rops[]{
-      [RFuncIndex::ADD] = RFuncs::ADD,     [RFuncIndex::SUB] = RFuncs::SUB,
-      [RFuncIndex::XOR] = RFuncs::XOR,     [RFuncIndex::OR] = RFuncs::OR,
-      [RFuncIndex::AND] = RFuncs::AND,     [RFuncIndex::SLL] = RFuncs::SLL,
-      [RFuncIndex::SRL] = RFuncs::SRL,     [RFuncIndex::SRA] = RFuncs::SRA,
-      [RFuncIndex::SLT] = RFuncs::SLT,     [RFuncIndex::SLTU] = RFuncs::SLTU,
-      [RFuncIndex::MUL] = RFuncs::MUL,     [RFuncIndex::MULH] = RFuncs::MULH,
-      [RFuncIndex::MULSU] = RFuncs::MULSU, [RFuncIndex::MULHU] = RFuncs::MULHU,
-      [RFuncIndex::DIV] = RFuncs::DIV,     [RFuncIndex::DIVU] = RFuncs::DIVU,
-      [RFuncIndex::REM] = RFuncs::REM,     [RFuncIndex::REMU] = RFuncs::REMU};
+      RFuncs::ADD,  RFuncs::SUB,  RFuncs::XOR,   RFuncs::OR,    RFuncs::AND,
+      RFuncs::SLL,  RFuncs::SRL,  RFuncs::SRA,   RFuncs::SLT,   RFuncs::SLTU,
+      RFuncs::MUL,  RFuncs::MULH, RFuncs::MULSU, RFuncs::MULHU, RFuncs::DIV,
+      RFuncs::DIVU, RFuncs::REM,  RFuncs::REMU};
   static_assert(RFuncIndex::NUM_STATES_R == sizeof(rops) / sizeof(rops[0]),
-                "Not all I-type operations defined\n");
+                "Not all R-type operations defined\n");
 
   constexpr static IOperations iops[]{
-      [IFuncIndex::ADDI] = IFuncs::ADDI,   [IFuncIndex::ORI] = IFuncs::ORI,
-      [IFuncIndex::XORI] = IFuncs::XORI,   [IFuncIndex::ANDI] = IFuncs::ANDI,
-      [IFuncIndex::SLLI] = IFuncs::SLLI,   [IFuncIndex::SRLI] = IFuncs::SRLI,
-      [IFuncIndex::SRAI] = IFuncs::SRAI,   [IFuncIndex::SLTI] = IFuncs::SLTI,
-      [IFuncIndex::SLTIU] = IFuncs::SLTIU, [IFuncIndex::LB] = IFuncs::LB,
-      [IFuncIndex::LH] = IFuncs::LH,       [IFuncIndex::LW] = IFuncs::LW,
-      [IFuncIndex::LBU] = IFuncs::LBU,     [IFuncIndex::LHU] = IFuncs::LHU,
-      [IFuncIndex::JALR] = IFuncs::JALR,   [IFuncIndex::ECALL] = IFuncs::ECALL};
+      IFuncs::ADDI,  IFuncs::ORI,  IFuncs::XORI, IFuncs::ANDI,
+      IFuncs::SLLI,  IFuncs::SRLI, IFuncs::SRAI, IFuncs::SLTI,
+      IFuncs::SLTIU, IFuncs::LB,   IFuncs::LH,   IFuncs::LW,
+      IFuncs::LBU,   IFuncs::LHU,  IFuncs::JALR, IFuncs::ECALL};
   static_assert(IFuncIndex::NUM_STATES_I == sizeof(iops) / sizeof(iops[0]),
                 "Not all I-type operations defined\n");
 
-  constexpr static SOperations sops[]{[SFuncIndex::SB] = SFuncs::SB,
-                                      [SFuncIndex::SH] = SFuncs::SH,
-                                      [SFuncIndex::SW] = SFuncs::SW};
+  constexpr static SOperations sops[]{SFuncs::SB, SFuncs::SH, SFuncs::SW};
   static_assert(SFuncIndex::NUM_STATES_S == sizeof(sops) / sizeof(sops[0]),
                 "Not all S-type operations defined\n");
 
-  constexpr static UOperations uops[]{[UFuncIndex::LUI] = UFuncs::LUI,
-                                      [UFuncIndex::AUIPC] = UFuncs::AUIPC};
+  constexpr static UOperations uops[]{UFuncs::LUI, UFuncs::AUIPC};
   static_assert(UFuncIndex::NUM_STATES_U == sizeof(uops) / sizeof(uops[0]),
                 "Not all U-type operations defined\n");
 
-  constexpr static JOperations jops[]{[JFuncIndex::JAL] = JFuncs::JAL};
+  constexpr static JOperations jops[]{JFuncs::JAL};
   static_assert(JFuncIndex::NUM_STATES_J == sizeof(jops) / sizeof(jops[0]),
                 "Not all J-type operations defined\n");
 
-  constexpr static BOperations bops[]{
-      [BFuncIndex::BEQ] = BFuncs::BEQ,   [BFuncIndex::BNE] = BFuncs::BNE,
-      [BFuncIndex::BLT] = BFuncs::BLT,   [BFuncIndex::BGE] = BFuncs::BGE,
-      [BFuncIndex::BLTU] = BFuncs::BLTU, [BFuncIndex::BGEU] = BFuncs::BGEU};
+  constexpr static BOperations bops[]{BFuncs::BEQ, BFuncs::BNE,  BFuncs::BLT,
+                                      BFuncs::BGE, BFuncs::BLTU, BFuncs::BGEU};
   static_assert(BFuncIndex::NUM_STATES_B == sizeof(bops) / sizeof(bops[0]),
                 "Not all B-type operations defined\n");
 
-  constexpr static FIOperations fiops[]{[Float_IIndex::FLW] = FExtension::FLW};
+  constexpr static FIOperations fiops[]{FExtension::FLW};
   static_assert(Float_IIndex::NUM_Float_I == sizeof(fiops) / sizeof(fiops[0]),
                 "Not all Float I-type operations defined\n");
 
-  constexpr static FSOperations fsops[]{[Float_SIndex::FSW] = FExtension::FSW};
+  constexpr static FSOperations fsops[]{FExtension::FSW};
   static_assert(Float_SIndex::NUM_Float_S == sizeof(fsops) / sizeof(fsops[0]),
                 "Not all Float S-type operations defined\n");
 
   constexpr static FR4Operations fr4ops[]{
-      [Float_R4Index::FMADD_S] = FExtension::FMADD_S,
-      [Float_R4Index::FMSUB_S] = FExtension::FMSUB_S,
-      [Float_R4Index::FNMSUB_S] = FExtension::FNMSUB_S,
-      [Float_R4Index::FNMADD_S] = FExtension::FNMADD_S};
+      FExtension::FMADD_S, FExtension::FMSUB_S, FExtension::FNMSUB_S,
+      FExtension::FNMADD_S};
   static_assert(Float_R4Index::NUM_Float_R4 ==
                     sizeof(fr4ops) / sizeof(fr4ops[0]),
                 "Not all Float R4-type operations defined\n");
 
   // FRoperations here
   constexpr static FROperations frops[]{
-      [Float_RIndex::FADD_S] = FExtension::FADD_S,
-      [Float_RIndex::FSUB_S] = FExtension::FSUB_S,
-      [Float_RIndex::FMUL_S] = FExtension::FMUL_S,
-      [Float_RIndex::FDIV_S] = FExtension::FDIV_S,
-      [Float_RIndex::FSQRT_S] = FExtension::FSQRT_S,
-      [Float_RIndex::FSGNJ_S] = FExtension::FSGNJ_S,
-      [Float_RIndex::FSGNJN_S] = FExtension::FSGNJN_S,
-      [Float_RIndex::FSGNJX_S] = FExtension::FSGNJX_S,
-      [Float_RIndex::FMIN_S] = FExtension::FMIN_S,
-      [Float_RIndex::FMAX_S] = FExtension::FMAX_S,
-      [Float_RIndex::FCVT_S_W] = FExtension::FCVT_S_W,
-      [Float_RIndex::FCVT_S_WU] = FExtension::FCVT_S_WU,
-      [Float_RIndex::FMV_W_X] = FExtension::FMV_W_X,
-      [Float_RIndex::FMV_X_W] = FExtension::FMV_X_W,
-      [Float_RIndex::FEQ_S] = FExtension::FEQ_S,
-      [Float_RIndex::FLT_S] = FExtension::FLT_S,
-      [Float_RIndex::FLE_S] = FExtension::FLE_S,
-      [Float_RIndex::FCLASS_S] = FExtension::FCLASS_S,
-      [Float_RIndex::FCVT_W_S] = FExtension::FCVT_W_S,
-      [Float_RIndex::FCVT_WU_S] = FExtension::FCVT_WU_S};
+      FExtension::FADD_S,   FExtension::FSUB_S,   FExtension::FMUL_S,
+      FExtension::FDIV_S,   FExtension::FSQRT_S,  FExtension::FSGNJ_S,
+      FExtension::FSGNJN_S, FExtension::FSGNJX_S, FExtension::FMIN_S,
+      FExtension::FMAX_S,   FExtension::FCVT_S_W, FExtension::FCVT_S_WU,
+      FExtension::FMV_W_X,  FExtension::FMV_X_W,  FExtension::FEQ_S,
+      FExtension::FLT_S,    FExtension::FLE_S,    FExtension::FCLASS_S,
+      FExtension::FCVT_W_S, FExtension::FCVT_WU_S};
   static_assert(Float_RIndex::NUM_Float_R == sizeof(frops) / sizeof(frops[0]),
-                "Not all Float R4-type operations defined\n");
+                "Not all Float R-type operations defined\n");
 };
