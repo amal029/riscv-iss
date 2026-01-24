@@ -9,7 +9,7 @@ int factorial(int n) {
 
 int main() {
   volatile int res = factorial(5);
-  char str[256] = {0};
+  char str[256];
   itoa(res / 2, str, 10);
   fputs("The result is: ", stdout);
   puts(str);

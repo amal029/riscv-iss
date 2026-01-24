@@ -1,8 +1,7 @@
 #include "../includes/lib.h"
 #include "../includes/syscodes.h"
 
-__attribute__((optimize("O1"))) void itoa(int value, char *str,
-                                          unsigned int base) {
+inline void itoa(int value, char *str, unsigned int base) {
   static char digits[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   int i = 0;
   int neg = 0;
@@ -39,7 +38,7 @@ __attribute__((optimize("O1"))) void itoa(int value, char *str,
   }
 }
 
-void ftoa(float num, char *str, int str_bytes) {
+inline void ftoa(float num, char *str, int str_bytes) {
   char *p = str;
 
   // Handle negative numbers

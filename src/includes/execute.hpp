@@ -265,24 +265,28 @@ struct IFuncs {
   [[gnu::always_inline]]
   static void LH(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
-    // TODO: This will not work for 64-bit architecture
+    uint16_t h;
+    std::memcpy(&h, DMEM + reg[rs1] + imm, sizeof(h));
+    reg[rd] = (word_t)(int16_t)h;
+    // std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
     // Sign extend the number
-    reg[rd] = ((reg[rd] >> ((WORD * 8 / 2) - 1)) == 0x0)
-                  ? reg[rd]
-                  : reg[rd] | 0xFFFF << (WORD / 2 * 8);
+    // reg[rd] = ((reg[rd] >> ((WORD * 8 / 2) - 1)) == 0x0)
+    //               ? reg[rd]
+    //               : reg[rd] | 0xFFFF << (WORD / 2 * 8);
   }
 
   [[gnu::always_inline]]
   static void LB(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
                  word_t imm, size_t *PC, bool *PC_Change) {
-    std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
-    // Need to sign extend the number
-    reg[rd] = ((reg[rd] >> 7) & 0x1) == 0x0
-                  ? reg[rd]
-                  : (WORD == 4 ? reg[rd] | 0xFFFFFF << 8
-                               // XXX: This is for 64-bit architecture
-                               : reg[rd] | 0xFFFFFFFFFFFFFF << 8);
+    uint8_t byte = *(DMEM + reg[rs1] + imm);
+    reg[rd] = (word_t)(int8_t)byte;
+    // std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
+    // // Need to sign extend the number
+    // reg[rd] = ((reg[rd] >> 7) & 0x1) == 0x0
+    //               ? reg[rd]
+    //               : (WORD == 4 ? reg[rd] | 0xFFFFFF << 8
+    //                            // XXX: This is for 64-bit architecture
+    //                            : reg[rd] | 0xFFFFFFFFFFFFFF << 8);
   }
 
   [[gnu::always_inline]]
@@ -816,8 +820,6 @@ private:
   size_t *PC;
   bool *PC_Change;
 
-  // XXX: This will only allow compiling with clang++ and g++ MSVC does
-  // not support this array designated initialization.
   constexpr static ROperations rops[]{
       RFuncs::ADD,  RFuncs::SUB,  RFuncs::XOR,   RFuncs::OR,    RFuncs::AND,
       RFuncs::SLL,  RFuncs::SRL,  RFuncs::SRA,   RFuncs::SLT,   RFuncs::SLTU,
