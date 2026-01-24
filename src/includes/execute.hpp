@@ -60,7 +60,7 @@ struct RFuncs {
   [[gnu::always_inline]]
   static inline constexpr void SRL(word_t *reg, uint8_t rd, uint8_t rs1,
                                    uint8_t rs2) {
-    reg[rd] = (word_t)((uword_t)reg[rs1]) >> (reg[rs2] & 0x1F);
+    reg[rd] = (word_t)(((uword_t)reg[rs1]) >> (reg[rs2] & 0x1F));
   }
 
   [[gnu::always_inline]]
