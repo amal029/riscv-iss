@@ -4,13 +4,14 @@
 #include "./includes/fetch.hpp"
 #include "./includes/system.hpp"
 #include <algorithm>
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <stdexcept>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -140,13 +141,19 @@ void add_break_points(std::vector<size_t> &breaks) {
     if (in == "q") {
       break;
     } else {
-      try {
-        breaks.emplace_back(std::stoull(in, nullptr, 16));
-        std::cout << "added breakpoint: " << in << "\n";
-      } catch (std::invalid_argument &) {
+      char *endptr;
+      size_t result;
+      result = strtoul(in.c_str(), &endptr, 16);
+      if (result == 0) {
         std::cerr << "Cannot parse input, try again\n";
         std::cerr << "Add breakpoints as numbers in hex, e.g., fc\n";
         std::cerr << "q for quitting\n";
+      } else if (errno == ERANGE) {
+        printf("Input value out of range\n");
+      } else {
+        // breaks.emplace_back(std::stoull(in, nullptr, 16));
+        breaks.emplace_back(result);
+        std::cout << "added breakpoint: " << in << "\n";
       }
     }
   }
@@ -227,6 +234,8 @@ int main(int argc, char **argv) {
       std::cin >> input;
     } else if (input == 'q') {
       break;
+    } else {
+      std::cin >> input;
     }
   }
   return 0;

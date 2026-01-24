@@ -1,5 +1,5 @@
 CXXFLAGS := -O3 -std=c++17 -Wall -Werror -Wextra -Wno-unused-parameter -Wshadow \
-	-Wswitch-enum
+	-Wswitch-enum -pedantic -fno-rtti -fno-exceptions
 CXX ?= g++-m			# if not already given
 
 RISCVCC  := riscv64-unknown-elf-gcc
