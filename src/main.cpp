@@ -3,6 +3,7 @@
 #include "./includes/execute.hpp"
 #include "./includes/fetch.hpp"
 #include "./includes/system.hpp"
+#include "./debug/debug.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <cstddef>
@@ -92,11 +93,8 @@ void print_mem(uint8_t *MEM) {
     else
       std::cout << " ";
 
-    if (i % 4 == 0) {
-      printf("%4lu", i);
-      // print_word(i);
-      std::cout << ": ";
-    }
+    if (i % 4 == 0)
+      printf("%4lu:", i);
     print_byte(MEM[i]);
   }
   std::cout << "\n";
@@ -143,15 +141,15 @@ void add_break_points(std::vector<size_t> &breaks) {
     } else {
       char *endptr;
       size_t result;
+      errno = 0;
       result = strtoul(in.c_str(), &endptr, 16);
-      if (result == 0) {
+      if (result == 0 && in.c_str() == endptr) {
         std::cerr << "Cannot parse input, try again\n";
         std::cerr << "Add breakpoints as numbers in hex, e.g., fc\n";
         std::cerr << "q for quitting\n";
       } else if (errno == ERANGE) {
         printf("Input value out of range\n");
       } else {
-        // breaks.emplace_back(std::stoull(in, nullptr, 16));
         breaks.emplace_back(result);
         std::cout << "added breakpoint: " << in << "\n";
       }
@@ -160,9 +158,11 @@ void add_break_points(std::vector<size_t> &breaks) {
 }
 
 int main(int argc, char **argv) {
+
 #ifndef IS_LITTLE_ENDIAN
   static_assert(false, "Only Little Endian architecture supported");
 #endif
+
   std::vector<uint8_t> file;
   if (argc < 2) {
     std::cout << "Please run the program with ./iss <file-name>.bin\n";
@@ -188,8 +188,13 @@ int main(int argc, char **argv) {
   std::memcpy(MEM, file.data(), file.size());
 
   uint32_t inst = 0;
-  // Type_Index val;
-  Execute exec{REGFILE, REGFILE_FLOAT, MEM, &PC, &PC_change};
+  // Debug/Log system
+  Log log{REGFILE, REGFILE_FLOAT, MEM};
+  
+  // Executor
+  Execute exec{REGFILE, REGFILE_FLOAT, MEM, &PC, &PC_change, &log};
+
+  
   unsigned char input;
 
   // Add all the breakpoints
@@ -201,8 +206,12 @@ int main(int argc, char **argv) {
   std::cout << "l: for printing registered breakpoints\n";
   std::cout << "r: to run the program\n";
   std::cout << "s: to step to next instruction\n";
+  std::cout << "z: for printing the recorded trace\n";
+  std::cout << "u: for going 1 step backwards (reverse-debugging)\n";
   std::cout << "q: to quit\n";
+
   std::cin >> input;
+
   while (1) {
     // Here we can dump the registers and memory if asked for.
     if (input == 'a') {
@@ -234,6 +243,12 @@ int main(int argc, char **argv) {
       std::cin >> input;
     } else if (input == 'q') {
       break;
+    } else if (input == 'z') {
+      log.print_log();
+      std::cin >> input;
+    } else if (input == 'u') {
+      log.reverse(&PC);
+      std::cin >> input;
     } else {
       std::cin >> input;
     }

@@ -1,0 +1,126 @@
+#pragma once
+
+#include "../includes/system.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+#include <vector>
+
+// This holds all the record for reverse debugging
+struct Record {
+  size_t PC;    // The program counter
+  size_t index; // The index to save the word in
+  int8_t TAG;
+  uint8_t word[WORD]; // The, usually 4-byte, word to save
+};
+
+// This object should be passed to the execute unit to save things
+// before executing the instruction.
+struct Log {
+
+  // ctor
+  Log(word_t *reg, fword_t *freg, uint8_t *mem)
+      : REGFILE(reg), MEM(mem), FREGFILE(freg) {};
+
+  static std::string tag2Type(const int8_t tag) {
+    switch(tag){
+    case 0:
+      return "REG";
+    case 1:
+      return "FREG";
+    case 2:
+      return "MEM";
+    default:
+      return "PC";
+    }
+  }
+
+  void print_record(const Record &x) const {
+    std::cout << "Record{\t";
+    std::cout << "PC: " << x.PC << ", index:" << x.index
+              << ", TAG:" << tag2Type(x.TAG) << ", word: ";
+    printf("[");
+    for (uint8_t i = 0; i < WORD; ++i) {
+      printf("%02x", x.word[i]);
+      if (i == WORD - 1)
+        printf("]");
+    }
+    std::cout << "}\n";
+  }
+
+  void print_log() const {
+    for (const Record &x : rec) {
+      print_record(x);
+    }
+  }
+
+  void recordFRegWord(size_t PC, uword_t freg_index) {
+    Record rr{PC, freg_index, 1, {0x0}};
+    memcpy(rr.word, FREGFILE + freg_index, WORD);
+    rec.push_back(rr);
+  }
+  void recordRegWord(size_t PC, uword_t reg_index) {
+    Record rr{PC, reg_index, 0, {0x0}};
+    memcpy(rr.word, REGFILE + reg_index, WORD);
+    rec.push_back(rr);
+  }
+  void recordMem(size_t PC, uword_t mem_add) {
+    // Get the whole mem word that needs to be saved
+    mem_add = mem_add - (mem_add % WORD); // Get the start of the word
+    Record rr{PC, mem_add, 2, {0x0}};
+    std::memcpy(rr.word, MEM + mem_add, WORD);
+    rec.push_back(rr);
+  }
+  void recordPC(size_t PC) { rec.push_back({PC, 0, -1, {0x0}}); }
+  // We can record the values everytime
+  void record(size_t PC, uword_t *mem_add = nullptr,
+                        uword_t *reg_index = nullptr,
+                        uword_t *freg_index = nullptr) {
+    if (mem_add != nullptr) {
+      // Here we want to store the mem word into the record
+      recordMem(PC, *mem_add);
+    } else if (reg_index != nullptr) {
+      recordRegWord(PC, *reg_index);
+    } else if (freg_index != nullptr) {
+      recordFRegWord(PC, *freg_index);
+    } else {
+      recordPC(PC);
+    }
+  }
+
+  // Getting the recorded values out and resetting the values in the
+  // correct positions.
+  void reverse(size_t *cPC) {
+    if (rec.size() == 0)
+      return;
+    Record rr = std::move(rec[rec.size() - 1]);
+    print_record(rr);
+    *cPC = rr.PC; // set the PC back
+    switch (rr.TAG) {
+    case 0:
+      // Restore register value
+      memcpy(REGFILE + rr.index, rr.word, WORD);
+      break;
+    case 1:
+      // Restore floating point register value
+      memcpy(FREGFILE + rr.index, rr.word, WORD);
+      break;
+    case 2:
+      // Restore memory word
+      memcpy(MEM + rr.index, rr.word, WORD);
+      break;
+    default:
+      // Do nothing
+      break;
+    }
+    rec.erase(rec.end() - 1); // Remove the last one from the vector
+  }
+
+private:
+  word_t *REGFILE;
+  uint8_t *MEM;
+  fword_t *FREGFILE;
+  std::vector<Record> rec; // AoS -- OK, because no throughput needed.
+};

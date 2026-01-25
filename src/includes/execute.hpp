@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../lib/includes/syscodes.h"
+#include "../debug/debug.hpp"
 #include "bits.hpp"
 #include "system.hpp"
 #include <algorithm>
@@ -16,102 +17,145 @@
 // The R-type functions
 struct RFuncs {
   [[gnu::always_inline]]
-  static inline constexpr void ADD(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void ADD(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    // Record the current values first
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
     reg[rd] = reg[rs1] + reg[rs2];
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void SUB(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void SUB(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
     reg[rd] = reg[rs1] - reg[rs2];
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void XOR(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void XOR(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
     reg[rd] = reg[rs1] ^ reg[rs2];
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void OR(word_t *reg, uint8_t rd, uint8_t rs1,
-                                  uint8_t rs2) {
+  static inline void OR(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                        Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] | reg[rs2];
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void AND(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void AND(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] & reg[rs2];
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void SLL(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void SLL(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] << (reg[rs2] & 0x1F);
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void SRA(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void SRA(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] >> (reg[rs2] & 0x1F);
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void SRL(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void SRL(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = (word_t)(((uword_t)reg[rs1]) >> (reg[rs2] & 0x1F));
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void SLT(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void SLT(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] < reg[rs2] ? 1 : 0;
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void SLTU(word_t *reg, uint8_t rd, uint8_t rs1,
-                                    uint8_t rs2) {
+  static inline void SLTU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                          Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     // XXX: Check that this is what the semantics are?
     reg[rd] = (uword_t)reg[rs1] < (uword_t)reg[rs2] ? 1 : 0;
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void MUL(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void MUL(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     // XXX: Check that this is what the semantics are?
     reg[rd] = ((int64_t)reg[rs1] * (int64_t)reg[rs2]) & 0xFFFFFFFF;
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void MULH(word_t *reg, uint8_t rd, uint8_t rs1,
-                                    uint8_t rs2) {
+  static inline void MULH(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                          Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     // XXX: Check that this is what the semantics are?
     reg[rd] = ((int64_t)reg[rs1] * (int64_t)reg[rs2]) >> 32;
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void MULSU(word_t *reg, uint8_t rd, uint8_t rs1,
-                                     uint8_t rs2) {
+  static inline void MULSU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                           Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+    
     // XXX: Check that this is what the semantics are?
     reg[rd] = ((int64_t)reg[rs1] * (uint64_t)reg[rs2]) >> 32;
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void MULHU(word_t *reg, uint8_t rd, uint8_t rs1,
-                                     uint8_t rs2) {
+  static inline void MULHU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                           Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     // XXX: Check that this is what the semantics are?
     reg[rd] = (uword_t)(((uint64_t)reg[rs1] * (uint64_t)reg[rs2]) >> 32);
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void DIV(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void DIV(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+    
     word_t dividend = static_cast<word_t>(reg[rs1]);
     word_t divisor = static_cast<word_t>(reg[rs2]);
 
@@ -130,9 +174,12 @@ struct RFuncs {
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void DIVU(word_t *reg, uint8_t rd, uint8_t rs1,
-                                    uint8_t rs2) {
+  static inline void DIVU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                          Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+    
     uword_t dividend = static_cast<uword_t>(reg[rs1]);
     uword_t divisor = static_cast<uword_t>(reg[rs2]);
 
@@ -146,9 +193,12 @@ struct RFuncs {
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void REM(word_t *reg, uint8_t rd, uint8_t rs1,
-                                   uint8_t rs2) {
+  static inline void REM(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                         Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+    
     word_t dividend = static_cast<word_t>(reg[rs1]);
     word_t divisor = static_cast<word_t>(reg[rs2]);
 
@@ -166,9 +216,12 @@ struct RFuncs {
   }
 
   [[gnu::always_inline]]
-  static inline constexpr void REMU(word_t *reg, uint8_t rd, uint8_t rs1,
-                                    uint8_t rs2) {
+  static inline void REMU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t rs2,
+                          Log *log, size_t cPC) {
     static_assert(WORD == 4, "Only 32-bit mul/div supported for now");
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     uword_t dividend = static_cast<uword_t>(reg[rs1]);
     uword_t divisor = static_cast<uword_t>(reg[rs2]);
 
@@ -184,16 +237,22 @@ struct RFuncs {
 
 struct IFuncs {
   [[gnu::always_inline]]
-  constexpr static void ADDI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void ADDI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] + imm;
   }
 
   [[gnu::always_inline]]
-  constexpr static void JALR(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void JALR(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = *PC + 4;
     *PC = (reg[rs1] + imm);
     // Setting the LSB to 0 as stated in the official documentation
@@ -202,96 +261,125 @@ struct IFuncs {
   }
 
   [[gnu::always_inline]]
-  constexpr static void ORI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                            word_t imm, size_t *PC, bool *PC_Change) {
+  static void ORI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                  word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                  size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] | imm;
   }
 
   [[gnu::always_inline]]
-  constexpr static void XORI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void XORI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] ^ imm;
   }
 
   [[gnu::always_inline]]
-  constexpr static void ANDI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void ANDI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] & imm;
   }
 
   [[gnu::always_inline]]
-  constexpr static void SLLI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void SLLI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] << (imm & 0b11111);
   }
 
   [[gnu::always_inline]]
-  constexpr static void SRLI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void SRLI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = (word_t)(((uword_t)reg[rs1]) >> (imm & 0b11111));
   }
 
   [[gnu::always_inline]]
-  constexpr static void SRAI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void SRAI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] >> (imm & 0b11111);
   }
 
   [[gnu::always_inline]]
-  constexpr static void SLTI(word_t *reg, uint8_t rd, uint8_t rs1,
-                             uint8_t *DMEM, word_t imm, size_t *PC,
-                             bool *PC_Change) {
+  static void SLTI(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                   word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                   size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = reg[rs1] < imm ? 1 : 0;
   }
 
   [[gnu::always_inline]]
-  constexpr static void SLTIU(word_t *reg, uint8_t rd, uint8_t rs1,
-                              uint8_t *DMEM, word_t imm, size_t *PC,
-                              bool *PC_Change) {
+  static void SLTIU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
+                    word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                    size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = (uword_t)reg[rs1] < (uword_t)imm ? 1 : 0;
   }
 
   [[gnu::always_inline]]
   static void LW(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                 word_t imm, size_t *PC, bool *PC_Change) {
+                 word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                 size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD);
   }
 
   [[gnu::always_inline]]
   static void LH(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                 word_t imm, size_t *PC, bool *PC_Change) {
+                 word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                 size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     uint16_t h;
     std::memcpy(&h, DMEM + reg[rs1] + imm, sizeof(h));
     reg[rd] = (word_t)(int16_t)h;
-    // std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
-    // Sign extend the number
-    // reg[rd] = ((reg[rd] >> ((WORD * 8 / 2) - 1)) == 0x0)
-    //               ? reg[rd]
-    //               : reg[rd] | 0xFFFF << (WORD / 2 * 8);
   }
 
   [[gnu::always_inline]]
   static void LB(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                 word_t imm, size_t *PC, bool *PC_Change) {
+                 word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                 size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     uint8_t byte = *(DMEM + reg[rs1] + imm);
     reg[rd] = (word_t)(int8_t)byte;
-    // std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
-    // // Need to sign extend the number
-    // reg[rd] = ((reg[rd] >> 7) & 0x1) == 0x0
-    //               ? reg[rd]
-    //               : (WORD == 4 ? reg[rd] | 0xFFFFFF << 8
-    //                            // XXX: This is for 64-bit architecture
-    //                            : reg[rd] | 0xFFFFFFFFFFFFFF << 8);
   }
 
   [[gnu::always_inline]]
   static void LBU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                  word_t imm, size_t *PC, bool *PC_Change) {
+                  word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                  size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, 1);
     // After this set all higher bytes to zero
     reg[rd] &= (WORD == 4) ? 0x000000FF : 0x00000000000000FF;
@@ -300,14 +388,19 @@ struct IFuncs {
 
   [[gnu::always_inline]]
   static void LHU(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                  word_t imm, size_t *PC, bool *PC_Change) {
+                  word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                  size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     std::memcpy(reg + rd, DMEM + reg[rs1] + imm, WORD / 2);
     reg[rd] &= (WORD == 4) ? 0x0000FFFF : 0x00000000FFFFFFFF;
   }
 
   [[gnu::always_inline]]
   static void ECALL(word_t *reg, uint8_t rd, uint8_t rs1, uint8_t *DMEM,
-                    word_t imm, size_t *PC, bool *PC_Change) {
+                    word_t imm, size_t *PC, bool *PC_Change, Log *log,
+                    size_t cPC) {
     // XXX: Check the syscall number in register a7 (x17)
     int fd;
     word_t address;
@@ -338,19 +431,34 @@ struct IFuncs {
 struct SFuncs {
   [[gnu::always_inline]]
   static void SB(word_t *reg, uint8_t rs1, uint8_t rs2, uint8_t *DMEM,
-                 word_t imm) {
+                 word_t imm, Log *log, size_t cPC) {
+
+    uword_t index = reg[rs1] + imm; // this has to be > 0
+    assert(index > 0);
+    log->record(cPC, &index, nullptr, nullptr);
+
     std::memcpy(DMEM + reg[rs1] + imm, reg + rs2, 1);
   }
 
   [[gnu::always_inline]]
   static void SH(word_t *reg, uint8_t rs1, uint8_t rs2, uint8_t *DMEM,
-                 word_t imm) {
+                 word_t imm, Log *log, size_t cPC) {
+
+    uword_t index = reg[rs1] + imm; // this has to be > 0
+    assert(index > 0);
+    log->record(cPC, &index, nullptr, nullptr);
+
     std::memcpy(DMEM + reg[rs1] + imm, reg + rs2, WORD / 2);
   }
 
   [[gnu::always_inline]]
   static void SW(word_t *reg, uint8_t rs1, uint8_t rs2, uint8_t *DMEM,
-                 word_t imm) {
+                 word_t imm, Log *log, size_t cPC) {
+
+    uword_t index = reg[rs1] + imm; // this has to be > 0
+    assert(index > 0);
+    log->record(cPC, &index, nullptr, nullptr);
+
     // DMEM[reg[rs1] + imm] = (word_t)reg[rs2];
     std::memcpy(DMEM + reg[rs1] + imm, reg + rs2, WORD);
   }
@@ -359,12 +467,20 @@ struct SFuncs {
 struct UFuncs {
 
   [[gnu::always_inline]]
-  static void LUI(word_t *reg, uint8_t rd, size_t PC, word_t imm) {
+  static void LUI(word_t *reg, uint8_t rd, size_t PC, word_t imm, Log *log,
+                  size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = imm;
   }
 
   [[gnu::always_inline]]
-  static void AUIPC(word_t *reg, uint8_t rd, size_t PC, word_t imm) {
+  static void AUIPC(word_t *reg, uint8_t rd, size_t PC, word_t imm, Log *log,
+                    size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = PC + imm;
   }
 };
@@ -372,7 +488,10 @@ struct UFuncs {
 struct JFuncs {
   [[gnu::always_inline]]
   static void JAL(word_t *reg, uint8_t rd, size_t *PC, word_t imm,
-                  bool *PC_Change) {
+                  bool *PC_Change, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, &index, nullptr);
+
     reg[rd] = *PC + 4;
     *PC += imm;
     *PC_Change = true;
@@ -383,7 +502,10 @@ struct BFuncs {
 
   [[gnu::always_inline]]
   static void BEQ(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC, word_t imm,
-                  bool *PC_Change) {
+                  bool *PC_Change, Log *log, size_t cPC) {
+
+    log->record(cPC, nullptr, nullptr, nullptr);
+
     if (reg[rs1] == reg[rs2]) {
       *PC = *PC + imm;
       *PC_Change = true;
@@ -394,7 +516,8 @@ struct BFuncs {
 
   [[gnu::always_inline]]
   static void BNE(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC, word_t imm,
-                  bool *PC_Change) {
+                  bool *PC_Change, Log *log, size_t cPC) {
+    log->record(cPC, nullptr, nullptr, nullptr);
     if (reg[rs1] != reg[rs2]) {
       *PC = *PC + imm;
       *PC_Change = true;
@@ -403,7 +526,8 @@ struct BFuncs {
 
   [[gnu::always_inline]]
   static void BLT(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC, word_t imm,
-                  bool *PC_Change) {
+                  bool *PC_Change, Log *log, size_t cPC) {
+    log->record(cPC, nullptr, nullptr, nullptr);
     if (reg[rs1] < reg[rs2]) {
       *PC += imm;
       *PC_Change = true;
@@ -412,7 +536,8 @@ struct BFuncs {
 
   [[gnu::always_inline]]
   static void BGE(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC, word_t imm,
-                  bool *PC_Change) {
+                  bool *PC_Change, Log *log, size_t cPC) {
+    log->record(cPC, nullptr, nullptr, nullptr);
     if (reg[rs1] >= reg[rs2]) {
       *PC += imm;
       *PC_Change = true;
@@ -421,7 +546,8 @@ struct BFuncs {
 
   [[gnu::always_inline]]
   static void BLTU(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC,
-                   word_t imm, bool *PC_Change) {
+                   word_t imm, bool *PC_Change, Log *log, size_t cPC) {
+    log->record(cPC, nullptr, nullptr, nullptr);
     if ((uword_t)reg[rs1] < (uword_t)reg[rs2]) {
       *PC += imm;
       *PC_Change = true;
@@ -430,7 +556,8 @@ struct BFuncs {
 
   [[gnu::always_inline]]
   static void BGEU(word_t *reg, uint8_t rs1, uint8_t rs2, size_t *PC,
-                   word_t imm, bool *PC_Change) {
+                   word_t imm, bool *PC_Change, Log *log, size_t cPC) {
+    log->record(cPC, nullptr, nullptr, nullptr);
     if ((uword_t)reg[rs1] >= (uword_t)reg[rs2]) {
       *PC += imm;
       *PC_Change = true;
@@ -442,164 +569,244 @@ struct BFuncs {
 struct FExtension {
   [[gnu::always_inline]]
   static void FLW(fword_t *freg, word_t *reg, uint8_t rd, uint8_t rs1,
-                  uint8_t *DMEM, word_t imm) {
+                  uint8_t *DMEM, word_t imm, Log *log, size_t cPC) {
+
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     std::memcpy(freg + rd, DMEM + reg[rs1] + imm, WORD);
   }
   // Floating point instructions
   [[gnu::always_inline]]
   static void FSW(fword_t *freg, word_t *reg, uint8_t *DMEM, uint8_t rs1,
-                  uint8_t rs2, word_t imm) {
+                  uint8_t rs2, word_t imm, Log *log, size_t cPC) {
+    uword_t index = reg[rs1] + imm;
+    log->record(cPC, &index, nullptr, nullptr); // floating point value
+
     std::memcpy(DMEM + reg[rs1] + imm, freg + rs2, WORD);
   }
 
   // Floating point instructions
   [[gnu::always_inline]]
   static void FMADD_S(fword_t *freg, uint8_t rs1, uint8_t rs2, uint8_t rs3,
-                      uint8_t rd) {
+                      uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = freg[rs1] * freg[rs2] + freg[rs3];
   }
 
   // Floating point instructions
   [[gnu::always_inline]]
   static void FMSUB_S(fword_t *freg, uint8_t rs1, uint8_t rs2, uint8_t rs3,
-                      uint8_t rd) {
+                      uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = freg[rs1] * freg[rs2] - freg[rs3];
   }
 
   // Floating point instructions
   [[gnu::always_inline]]
   static void FNMADD_S(fword_t *freg, uint8_t rs1, uint8_t rs2, uint8_t rs3,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = -freg[rs1] * freg[rs2] + freg[rs3];
   }
 
   [[gnu::always_inline]]
   static void FNMSUB_S(fword_t *freg, uint8_t rs1, uint8_t rs2, uint8_t rs3,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = -freg[rs1] * freg[rs2] - freg[rs3];
   }
 
   [[gnu::always_inline]]
   static void FADD_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                     uint8_t rd) {
+                     uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = freg[rs1] + freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FSUB_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                     uint8_t rd) {
+                     uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = freg[rs1] - freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FMUL_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                     uint8_t rd) {
+                     uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = freg[rs1] * freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FDIV_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                     uint8_t rd) {
+                     uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = freg[rs1] / freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FSQRT_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                      uint8_t rd) {
+                      uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = std::sqrtf(freg[rs1]);
   }
 
   [[gnu::always_inline]]
   static void FSGNJ_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                      uint8_t rd) {
+                      uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
     freg[rd] = std::abs(freg[rs1]) * sgn;
   }
 
   [[gnu::always_inline]]
   static void FSGNJN_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
     freg[rd] = std::abs(freg[rs1]) * -sgn;
   }
 
   [[gnu::always_inline]]
   static void FSGNJX_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     int8_t sgn = std::signbit(freg[rs2]) == false ? 1 : -1;
     freg[rd] = freg[rs1] * sgn;
   }
 
   [[gnu::always_inline]]
   static void FMIN_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                     uint8_t rd) {
+                     uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = std::min(freg[rs1], freg[rs2]);
   }
 
   [[gnu::always_inline]]
   static void FMAX_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                     uint8_t rd) {
+                     uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = std::max(freg[rs1], freg[rs2]);
   }
 
   [[gnu::always_inline]]
   static void FCVT_S_W(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = (fword_t)reg[rs1];
   }
 
   [[gnu::always_inline]]
   static void FCVT_S_WU(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                        uint8_t rd) {
+                        uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     freg[rd] = (fword_t)reg[rs1];
   }
 
   [[gnu::always_inline]]
   static void FCVT_W_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     reg[rd] = (word_t)freg[rs1];
   }
 
   [[gnu::always_inline]]
   static void FCVT_WU_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                        uint8_t rd) {
+                        uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     reg[rd] = (uword_t)freg[rs1];
   }
 
   [[gnu::always_inline]]
   static void FMV_X_W(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                      uint8_t rd) {
+                      uint8_t rd, Log *log, size_t cPC) {
     static_assert(sizeof(freg[rs1]) == WORD, "Only 32 bit handled right now");
+
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     std::memcpy(reg + rd, freg + rs1, WORD);
   }
 
   [[gnu::always_inline]]
   static void FMV_W_X(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                      uint8_t rd) {
+                      uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     std::memcpy(freg + rd, reg + rs1, WORD);
   }
 
   [[gnu::always_inline]]
   static void FEQ_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                    uint8_t rd) {
+                    uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     reg[rd] = freg[rs1] == freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FLT_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                    uint8_t rd) {
+                    uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     reg[rd] = freg[rs1] < freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FLE_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                    uint8_t rd) {
+                    uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     reg[rd] = freg[rs1] <= freg[rs2];
   }
 
   [[gnu::always_inline]]
   static void FCLASS_S(fword_t *freg, word_t *reg, uint8_t rs1, uint8_t rs2,
-                       uint8_t rd) {
+                       uint8_t rd, Log *log, size_t cPC) {
+    uword_t index = rd;
+    log->record(cPC, nullptr, nullptr, &index); // floating point value
+
     word_t res = 0b0000000001;
     fword_t w = freg[rs1];
     // Check for different classes
@@ -656,9 +863,9 @@ struct Execute {
   }
 
   Execute(word_t *rf, fword_t *frf, uint8_t *DMEMa, size_t *PCa,
-          bool *PC_Changea)
+          bool *PC_Changea, Log *l)
       : REGFILE(rf), REGFILE_FLOAT(frf), DMEM(DMEMa), PC(PCa),
-        PC_Change(PC_Changea) {}
+        PC_Change(PC_Changea), log(l) {}
   // This class executes the given instruction using function pointer
   // dispatch.
   void execute(Type_Index tyi, uint32_t inst) {
@@ -669,7 +876,7 @@ struct Execute {
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
-      rops[tyi.rindex](REGFILE, rd, rs1, rs2);
+      rops[tyi.rindex](REGFILE, rd, rs1, rs2, log, *PC);
       break;
     }
     case ITYPES::I: {
@@ -678,7 +885,7 @@ struct Execute {
       imm = sign_extend_imm(inst, imm);
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
-      iops[tyi.iindex](REGFILE, rd, rs1, DMEM, imm, PC, PC_Change);
+      iops[tyi.iindex](REGFILE, rd, rs1, DMEM, imm, PC, PC_Change, log, *PC);
       break;
     }
     case ITYPES::B: {
@@ -694,7 +901,7 @@ struct Execute {
       word_t imm = imm1 | imm2 | imm3;
       // Now sign extend this immediate value
       imm = sign_extend_imm(inst, imm); // we can use this here
-      bops[tyi.bindex](REGFILE, rs1, rs2, PC, imm, PC_Change);
+      bops[tyi.bindex](REGFILE, rs1, rs2, PC, imm, PC_Change, log, *PC);
       break;
     }
     case ITYPES::J: {
@@ -712,13 +919,13 @@ struct Execute {
       word_t imm = imm1 | imm2 | imm3 | imm4;
       // sign extend the immediate number
       imm = sign_extend_j(inst, imm);
-      jops[tyi.jindex](REGFILE, rd, PC, imm, PC_Change);
+      jops[tyi.jindex](REGFILE, rd, PC, imm, PC_Change, log, *PC);
       break;
     }
     case ITYPES::U: {
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       word_t imm = inst & (Masks::U_IMM_MASK << INST_BIT_SHIFT::U_IMM_SHIFT);
-      uops[tyi.uindex](REGFILE, rd, *PC, imm);
+      uops[tyi.uindex](REGFILE, rd, *PC, imm, log, *PC);
       break;
     }
     case ITYPES::S: {
@@ -731,7 +938,7 @@ struct Execute {
           (inst >> INST_BIT_SHIFT::S_IMM_UPPER_SHIFT) & Masks::S_IMM_UPPER_MASK;
       word_t imm = tmp1 | (tmp2 << INST_BIT_SHIFT::S_IMM_UPPER_L_SHIFT);
       imm = sign_extend_imm(inst, imm);
-      sops[tyi.sindex](REGFILE, rs1, rs2, DMEM, imm);
+      sops[tyi.sindex](REGFILE, rs1, rs2, DMEM, imm, log, *PC);
       break;
     }
     case ITYPES::FloatI: {
@@ -740,7 +947,7 @@ struct Execute {
       imm = sign_extend_imm(inst, imm);
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
-      fiops[tyi.iindex](REGFILE_FLOAT, REGFILE, rd, rs1, DMEM, imm);
+      fiops[tyi.iindex](REGFILE_FLOAT, REGFILE, rd, rs1, DMEM, imm, log, *PC);
       break;
     }
     case ITYPES::FloatS: {
@@ -753,14 +960,14 @@ struct Execute {
           (inst >> INST_BIT_SHIFT::S_IMM_UPPER_SHIFT) & Masks::S_IMM_UPPER_MASK;
       word_t imm = tmp1 | (tmp2 << INST_BIT_SHIFT::S_IMM_UPPER_L_SHIFT);
       imm = sign_extend_imm(inst, imm);
-      fsops[tyi.sindex](REGFILE_FLOAT, REGFILE, DMEM, rs1, rs2, imm);
+      fsops[tyi.sindex](REGFILE_FLOAT, REGFILE, DMEM, rs1, rs2, imm, log, *PC);
       break;
     }
     case ITYPES::FloatR: {
       uint8_t rs2 = ((inst >> INST_BIT_SHIFT::RS2_SHIFT) & Masks::RS2_MASK);
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
-      frops[tyi.frindex](REGFILE_FLOAT, REGFILE, rs1, rs2, rd);
+      frops[tyi.frindex](REGFILE_FLOAT, REGFILE, rs1, rs2, rd, log, *PC);
       break;
     }
     case ITYPES::FloatR4: {
@@ -768,7 +975,7 @@ struct Execute {
       uint8_t rs1 = ((inst >> INST_BIT_SHIFT::RS1_SHIFT) & Masks::RS1_MASK);
       uint8_t rd = ((inst >> INST_BIT_SHIFT::RD_SHIFT) & Masks::RD_MASK);
       uint8_t rs3 = ((inst >> INST_BIT_SHIFT::R3_SHIFT) & Masks::RS3_MASK);
-      fr4ops[tyi.fr4index](REGFILE_FLOAT, rs1, rs2, rs3, rd);
+      fr4ops[tyi.fr4index](REGFILE_FLOAT, rs1, rs2, rs3, rd, log, *PC);
       break;
     }
     case ITYPES::FloatCSR: {
@@ -779,32 +986,38 @@ struct Execute {
   }
   // Now give the function pointer table for each of the different types.
   using ROperations = void (*)(word_t *reg, uint8_t rd, uint8_t rs1,
-                               uint8_t rs2);
+                               uint8_t rs2, Log *log, size_t cPC);
 
   using IOperations = void (*)(word_t *reg, uint8_t rd, uint8_t rs1,
                                uint8_t *DMEM, word_t imm, std::size_t *PC,
-                               bool *PC_Change);
+                               bool *PC_Change, Log *log, size_t cPC);
 
   using FIOperations = void (*)(fword_t *freg, word_t *reg, uint8_t rd,
-                                uint8_t rs1, uint8_t *DMEM, word_t imm);
+                                uint8_t rs1, uint8_t *DMEM, word_t imm,
+                                Log *log, size_t cPC);
 
   using FR4Operations = void (*)(fword_t *freg, uint8_t rs1, uint8_t rs2,
-                                 uint8_t rs3, uint8_t rd);
+                                 uint8_t rs3, uint8_t rd, Log *log, size_t cPC);
 
   using FROperations = void (*)(fword_t *freg, word_t *reg, uint8_t rs1,
-                                uint8_t rs2, uint8_t rd);
+                                uint8_t rs2, uint8_t rd, Log *log, size_t cPC);
 
   using FSOperations = void (*)(fword_t *freg, word_t *reg, uint8_t *DMEM,
-                                uint8_t rs1, uint8_t rs2, word_t imm);
+                                uint8_t rs1, uint8_t rs2, word_t imm, Log *log,
+                                size_t cPC);
 
   using SOperations = void (*)(word_t *reg, uint8_t rs1, uint8_t rs2,
-                               uint8_t *DMEM, word_t imm);
+                               uint8_t *DMEM, word_t imm, Log *log, size_t cPC);
 
-  using UOperations = void (*)(word_t *reg, uint8_t rd, size_t PC, word_t imm);
+  using UOperations = void (*)(word_t *reg, uint8_t rd, size_t PC, word_t imm,
+                               Log *log, size_t cPC);
   using JOperations = void (*)(word_t *reg, uint8_t rd, size_t *PC, word_t imm,
-                               bool *PC_Change);
+                               bool *PC_Change, Log *log, size_t cPC);
+
   using BOperations = void (*)(word_t *reg, uint8_t rs1, uint8_t rs2,
-                               size_t *PC, word_t imm, bool *PC_Change);
+                               size_t *PC, word_t imm, bool *PC_Change,
+                               Log *log, size_t cPC);
+
   void setPC_Change() { *PC_Change = false; }
   bool getPC_Change() const { return *PC_Change; }
   void setRegFile(uint8_t index, int value) {
@@ -819,6 +1032,7 @@ private:
   uint8_t *DMEM;
   size_t *PC;
   bool *PC_Change;
+  Log *log;
 
   constexpr static ROperations rops[]{
       RFuncs::ADD,  RFuncs::SUB,  RFuncs::XOR,   RFuncs::OR,    RFuncs::AND,
