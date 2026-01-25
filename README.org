@@ -139,7 +139,7 @@ in ~tests~ folder.
    4. Now can now execute the ~sin_taylor.bin~ file using the ISS; like
       so:
       #+begin_src bash
-	riscv-iss % ./iss ./tests/sin_taylor.bin # ./iss is the ISS and the .bin is the input file
+	./iss ./tests/sin_taylor.bin # ./iss is the ISS and the .bin is the input file
       #+end_src
    5. The output should be the following:
       #+begin_src bash
