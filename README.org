@@ -149,6 +149,8 @@ in ~tests~ folder.
 	l: for printing registered breakpoints
 	r: to run the program
 	s: to step to next instruction
+	z: for printing the recorded trace
+	u: for going 1 step backwards (reverse-debugging)
 	q: to quit
       #+end_src
    6. We can now run the ISS to execute the compiled binary by pressing ~r~.
@@ -550,13 +552,13 @@ in ~tests~ folder.
      u: for going 1 step backwards (reverse-debugging) # go up 1 step
      q: to quit
 
-     a # << add a break point
+     a # << command input 'a' add a break point
      Add breakpoints as numbers in hex, e.g., fc
      q for quitting
-     a8 # << break point added at assembler instruction a8
+     a8 # << input 'a8' break point added at assembler instruction a8
      added breakpoint: a8
-     q # << quit the adding break point state
-     r # << run program until PC = a8
+     q # << command input 'q' quit the adding break point state
+     r # << command input 'r' run program until PC = a8
      0:00001137
      4:80010113
      8:0a0000ef
@@ -578,14 +580,14 @@ in ~tests~ folder.
      fs9: 0	fsa: 0	fsb: 0	ft0: 0
      ft1: 0	ft2: 0	ft3: 0
 
-     z # << print the recorded trace until this point
+     z # << command input 'z' print the recorded trace until this point
      Record{	PC: 0, index:2, TAG:REG, word: [00000000]} # PC instr 0x0 executed
      Record{	PC: 4, index:2, TAG:REG, word: [00100000]} # PC instr 0x4 executed
      Record{	PC: 8, index:1, TAG:REG, word: [00000000]} # PC instr 0x8 executed
 
-     u # << go up one assembler instruction
+     u # << command input 'u' go up one assembler instruction
      Record{	PC: 8, index:1, TAG:REG, word: [00000000]}
-     p #<< print the state of the machine
+     p # << command input 'p' print the state of the machine
      x0: 00000000	ra: 00000000	sp: 00000800	gp: 00000000	x4: 00000000
      t0: 00000000	t1: 00000000	t2: 00000000	s0: 00000000
      x9: 00000000	a0: 00000000	a1: 00000000	a2: 00000000
@@ -602,10 +604,10 @@ in ~tests~ folder.
      fs5: 0	fs6: 0	fs7: 0	fs8: 0
      fs9: 0	fsa: 0	fsb: 0	ft0: 0
      ft1: 0	ft2: 0	ft3: 0	
-     r # << run the program again until break point
+     r # << command input 'r' run the program again until break point
      4:80010113
      8:0a0000ef
-     p # << print the machine state
+     p # << command input 'p' print the machine state
      x0: 00000000	ra: 0000000c	sp: 00000800	gp: 00000000	x4: 00000000
      t0: 00000000	t1: 00000000	t2: 00000000	s0: 00000000
      x9: 00000000	a0: 00000000	a1: 00000000	a2: 00000000
