@@ -629,7 +629,7 @@ in ~tests~ folder.
    * User can put a breakpoint at any time.
    * Recording of trace happens automatically.
    * User can go back up any number of assembler instruction at anytime
-     program as long as the program is halted at a breakpoint.
+     as long as the program is halted at a breakpoint.
    * Any other command can be issued during reverse debugging, e.g.,
      setting new breakpoints, re-running until the next break point,
      etc.
