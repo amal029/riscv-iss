@@ -628,8 +628,11 @@ in ~tests~ folder.
    Points to note:
    * User can put a breakpoint at any time.
    * Recording of trace happens automatically.
-   * User can go back up 1 assembler instruction at anytime program has
-     halted at a breakpoint.
+   * User can go back up any number of assembler instruction at anytime
+     program as long as the program is halted at a breakpoint.
+   * Any other command can be issued during reverse debugging, e.g.,
+     setting new breakpoints, re-running until the next break point,
+     etc.
    * Going back in time works across functions; function stack and
      memory are handled correctly when reverse debugging
 
