@@ -983,6 +983,7 @@ struct Execute {
       assert(false);
     }
     }
+    setRegFile(0, 0); // setting the x0 register to 0
   }
   // Now give the function pointer table for each of the different types.
   using ROperations = void (*)(word_t *reg, uint8_t rd, uint8_t rs1,

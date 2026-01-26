@@ -1,6 +1,6 @@
 [
     { "directory": "/Users/amal029/Documents/riscv-iss/src/includes",
-      "command": "c++ -std=c++26 -Wextra -Wall -Wshadow -Wno-unused-parameter
+      "command": "c++ -std=c++17 -Wextra -Wall -Wshadow -Wno-unused-parameter
                  -Wpedantic -Wnoc99-designator",
       "file": "execute.cpp"
     }

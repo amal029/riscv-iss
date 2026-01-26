@@ -111,7 +111,6 @@ std::vector<uint8_t> readFile(const std::string &filename) {
 
 void execute(uint32_t inst, uint8_t *MEM, size_t &PC, Execute &exec, bool br) {
   exec.setPC_Change();
-  exec.setRegFile(0, 0);
   // First fetch the instruction from I-memory
   inst = Fetch::fetch(MEM, PC);
   if (br) {
