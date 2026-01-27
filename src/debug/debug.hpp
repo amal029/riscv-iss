@@ -27,7 +27,7 @@ struct Log {
   Log(word_t *reg, fword_t *freg, uint8_t *mem)
       : REGFILE(reg), MEM(mem), FREGFILE(freg) {};
 
-  static std::string tag2Type(const TAG tag) {
+  static constexpr const char *tag2Type(const TAG tag) noexcept {
     switch (tag) {
     case TAG::BASE_REG:
       return "BASE_REG";
@@ -38,15 +38,14 @@ struct Log {
     case TAG::PC:
       return "PC";
     default:
-      assert(false);
+      return "UNKNOWN";
     }
   }
 
   void print_record(const Record &x) const {
-    std::cout << "Record{\t";
-    std::cout << "PC: " << x.PC << ", index:" << x.index
-              << ", TAG:" << tag2Type(x.tag) << ", word: ";
-    printf("[");
+    printf("Record{\t");
+    printf("PC: %lx, index: %lx, TAG: %s, word: [", x.PC, x.index,
+           tag2Type(x.tag));
     for (auto i = 0; i < WORD; ++i) {
       printf("%02x", x.word[i]);
       if (i == WORD - 1)
@@ -100,7 +99,6 @@ struct Log {
     if (rec.size() == 0)
       return;
     Record &rr = rec.back();
-    print_record(rr);
     *cPC = rr.PC; // set the PC back
     switch (rr.tag) {
     case TAG::BASE_REG:
