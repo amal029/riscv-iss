@@ -34,7 +34,7 @@ struct Log {
     case TAG::FLOAT_REG:
       return "FLOAT_REG";
     case TAG::MEM:
-      return "MEMEMORY";
+      return "MEMORY";
     case TAG::PC:
       return "PC";
     default:
@@ -47,7 +47,7 @@ struct Log {
     std::cout << "PC: " << x.PC << ", index:" << x.index
               << ", TAG:" << tag2Type(x.tag) << ", word: ";
     printf("[");
-    for (uint8_t i = 0; i < WORD; ++i) {
+    for (auto i = 0; i < WORD; ++i) {
       printf("%02x", x.word[i]);
       if (i == WORD - 1)
         printf("]");
@@ -63,12 +63,12 @@ struct Log {
 
   void recordFRegWord(size_t PC, uword_t freg_index) {
     Record rr{PC, freg_index, TAG::FLOAT_REG, {0x0}};
-    memcpy(rr.word, FREGFILE + freg_index, WORD);
+    std::memcpy(rr.word, FREGFILE + freg_index, WORD);
     rec.push_back(rr);
   }
   void recordRegWord(size_t PC, uword_t reg_index) {
     Record rr{PC, reg_index, TAG::BASE_REG, {0x0}};
-    memcpy(rr.word, REGFILE + reg_index, WORD);
+    std::memcpy(rr.word, REGFILE + reg_index, WORD);
     rec.push_back(rr);
   }
   void recordMem(size_t PC, uword_t mem_add) {
@@ -99,27 +99,27 @@ struct Log {
   void reverse(size_t *cPC) {
     if (rec.size() == 0)
       return;
-    Record rr{std::move(rec[rec.size() - 1])};
+    Record &rr = rec.back();
     print_record(rr);
     *cPC = rr.PC; // set the PC back
     switch (rr.tag) {
     case TAG::BASE_REG:
       // Restore register value
-      memcpy(REGFILE + rr.index, rr.word, WORD);
+      std::memcpy(REGFILE + rr.index, rr.word, WORD);
       break;
     case TAG::FLOAT_REG:
       // Restore floating point register value
-      memcpy(FREGFILE + rr.index, rr.word, WORD);
+      std::memcpy(FREGFILE + rr.index, rr.word, WORD);
       break;
     case TAG::MEM:
       // Restore memory word
-      memcpy(MEM + rr.index, rr.word, WORD);
+      std::memcpy(MEM + rr.index, rr.word, WORD);
       break;
     case TAG::PC:
       // Do nothing
       break;
     }
-    rec.erase(rec.end() - 1); // Remove the last one from the vector
+    rec.pop_back();
   }
 
 private:

@@ -423,7 +423,6 @@ struct IFuncs {
       len = reg[12];
       read(fd, DMEM + address, len);
       break;
-      break;
     }
   }
 };
@@ -851,13 +850,13 @@ struct Execute {
 
   // Sign extend the number
   constexpr static inline word_t sign_extend_imm(uint32_t inst, word_t x) {
-    uint8_t sign = (inst >> 31 & 0x1); // instruction is always 32 bits
+    uint8_t sign = ((inst >> 31) & 0x1); // instruction is always 32 bits
     x = (sign == 0) ? x : (WORD == 4 ? x | 0xFFFFF000 : x | 0xFFFFFFFFFFFFF000);
     return x;
   }
 
   constexpr static inline word_t sign_extend_j(uint32_t inst, word_t x) {
-    uint8_t sign = (inst >> 31 & 0x1); // instruction is always 32 bits
+    uint8_t sign = ((inst >> 31) & 0x1); // instruction is always 32 bits
     x = (sign == 0) ? x : (WORD == 4 ? x | 0xFFF00000 : x | 0xFFFFFFFFFFF00000);
     return x;
   }
